@@ -26,7 +26,7 @@
 
   <link
     rel="stylesheet"
-    href="style.css?v=1.0.8"
+    href="style.css?v=1.1.0"
   />
 
   <link
@@ -50,7 +50,7 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css"
   />
 
-    <link rel="manifest" href="manifest.json?v=1.0.8">
+    <link rel="manifest" href="manifest.json?v=1.1.0">
 
     <meta name="theme-color" content="#ff7a00">
 </head>
@@ -72,11 +72,6 @@
       <h1 class="login-title">
         AQILA MUSIC
       </h1>
-
-      <p
-        class="login-subtitle"
-        id="appVersion">
-      </p>
 
       <form id="loginForm" class="login-form">
 
@@ -115,6 +110,13 @@
 
               <div
                 class="select-option"
+                data-value="vocal"
+              >
+                Vocal
+              </div>
+
+              <div
+                class="select-option"
                 data-value="lainnya"
               >
                 Lainnya
@@ -129,6 +131,41 @@
             id="role"
             required
           />
+
+        </div>
+
+        <div class="input-group">
+
+          <label>
+            Nama
+          </label>
+
+          <div class="input-box">
+
+            <i class="ri-user-line"></i>
+
+            <input
+              type="text"
+              id="nameInput"
+
+              placeholder=
+              "Masukkan Nama"
+
+              maxlength="20"
+
+              autocomplete=
+              "name"
+
+              pattern=
+              "[A-Za-z\s]+"
+
+              title=
+              "Hanya huruf, maksimal 20 karakter"
+
+              required
+            />
+
+          </div>
 
         </div>
 
@@ -158,6 +195,21 @@
             </button>
 
           </div>
+
+        </div>
+        
+        <div class="remember-box">
+
+          <label>
+
+            <input
+              type="checkbox"
+              id="rememberMe"
+            >
+
+            Ingat Saya
+
+          </label>
 
         </div>
 
@@ -507,6 +559,169 @@
 
       </section>
 
+      <section
+        id="accountSection"
+        class="content-section"
+      >
+
+        <div class="account-card">
+
+          <h2 class="account-title">
+            Akun
+          </h2>
+
+          <div class="account-profile-icon">
+            <i class="ri-user-3-fill"></i>
+          </div>
+
+          <p id="accountRoleText">
+            Pengguna
+          </p>
+
+          <form
+            id="googleSearchForm"
+            class="google-search-form"
+          >
+
+            <div class="google-search-box">
+
+              <i class="ri-google-fill"></i>
+
+              <input
+                type="text"
+                id="googleSearchInput"
+                placeholder="Cari di Google..."
+              />
+
+              <button
+                type="submit"
+                class="google-search-btn"
+                aria-label="Cari Google"
+              >
+                <i class="ri-search-line"></i>
+              </button>
+
+            </div>
+
+          </form>
+
+          <button
+            type="button"
+            class="account-menu-btn"
+            id="openSpreadsheetBtn"
+          >
+            <span class="account-menu-icon">
+              <i class="ri-file-excel-2-line"></i>
+            </span>
+
+            <span class="account-menu-text">
+              Daftar Lagu (GSheets)
+            </span>
+
+            <i class="ri-arrow-right-s-line account-menu-arrow"></i>
+          </button>
+
+          <button
+            type="button"
+            class="account-menu-btn"
+            id="printSongBtn"
+          >
+
+            <span class="account-menu-icon">
+
+              <i class="ri-printer-line"></i>
+
+            </span>
+
+            <span class="account-menu-text">
+
+              Cetak Daftar Lagu
+
+            </span>
+
+            <i
+              class="
+              ri-arrow-right-s-line
+              account-menu-arrow
+              "
+            ></i>
+
+          </button>
+
+          <button
+            type="button"
+            class="account-menu-btn"
+            id="changePasswordBtn"
+          >
+
+            <span class="account-menu-icon">
+
+              <i class="ri-lock-password-line"></i>
+
+            </span>
+
+            <span class="account-menu-text">
+
+              Ubah Password
+
+            </span>
+
+            <i
+              class="
+              ri-arrow-right-s-line
+              account-menu-arrow
+              "
+            ></i>
+
+          </button>
+
+          <button
+            type="button"
+            class="account-menu-btn"
+            id="versionBtn"
+          >
+
+            <span class="account-menu-icon">
+
+              <i class="ri-information-line"></i>
+
+            </span>
+
+            <span class="account-menu-text">
+
+              Lihat Versi
+
+            </span>
+
+            <i
+              class="
+              ri-arrow-right-s-line
+              account-menu-arrow
+              "
+            ></i>
+
+          </button>
+
+          <button
+            type="button"
+            class="account-menu-btn danger"
+            id="logoutBtn"
+          >
+            <span class="account-menu-icon">
+              <i class="ri-logout-box-r-line"></i>
+            </span>
+
+            <span class="account-menu-text">
+              Logout
+            </span>
+
+            <i class="ri-arrow-right-s-line account-menu-arrow"></i>
+          </button>
+
+        </div>
+
+      </section>
+
     </main>
 
     <nav class="bottom-nav">
@@ -538,14 +753,15 @@
       </button>
 
       <button
-        class="logout-btn"
-        id="logoutBtn"
+        class="nav-btn"
+        data-target="accountSection"
+        id="accountNavBtn"
       >
 
         <i class="ri-user-3-line"></i>
 
         <small>
-          Logout
+          Akun
         </small>
 
       </button>
@@ -594,7 +810,7 @@
 
     </div>
 
-    <script src="script.js?v=1.0.8"></script>
+    <script src="script.js?v=1.1.0"></script>
 
 </body>
 </html>

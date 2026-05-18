@@ -1,8 +1,8 @@
 const APP_VERSION =
-  "1.0.8";
+  "1.1.0";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyU_nuzPaURiNrnbVb5n-e5r1ef7imvdw1Hu-oXQ29OOmiqzPxnLEm7DI000kzyAjR7/exec";
+  "https://script.google.com/macros/s/AKfycbyTnWK2JCJqYkliveM9ae1QgwmJzTJKf685zsWsNZa4ZuMt-FL1nWw2MzQsG_MwCtuC/exec";
 
 let currentRequestPage = 1;
 
@@ -406,6 +406,28 @@ loginForm.addEventListener(
     const password =
       document.getElementById("password").value;
 
+    const userName =
+      document
+        .getElementById("nameInput")
+        .value
+        .trim();
+
+    if (!userName) {
+      alert("Nama tidak boleh kosong");
+      return;
+    }
+
+    if (
+      userName.length < 3
+    ) {
+
+      alert(
+        "Nama minimal 3 huruf"
+      );
+
+      return;
+    }
+
     if (!role || !password) {
 
       alert("Lengkapi data login");
@@ -451,6 +473,63 @@ loginForm.addEventListener(
       localStorage.setItem(
         "aqila_role",
         role
+      );
+
+      fetch(
+        SCRIPT_URL,
+
+        {
+
+          method:
+            "POST",
+
+          body:
+            JSON.stringify({
+
+              action:
+                "saveLogin",
+
+              name:
+                userName,
+
+              role:
+                {
+                  player: "Player",
+                  vocal: "Vocal",
+                  lainnya: "Guest"
+                }[role]
+
+            })
+
+        }
+      );
+
+      localStorage.removeItem(
+        "aqila_logged_out"
+      );
+
+      const rememberMe =
+      document.getElementById(
+        "rememberMe"
+      ).checked;
+
+      if (rememberMe) {
+
+        localStorage.setItem(
+          "aqila_remember",
+          "true"
+        );
+
+      } else {
+
+        localStorage.removeItem(
+          "aqila_remember"
+        );
+      }
+
+      localStorage.setItem(
+        "aqila_name",
+        userName
       );
 
       alert(
@@ -596,8 +675,25 @@ function showApp(role) {
 
   currentRole = role;
 
+  const accountRoleText =
+    document.getElementById(
+      "accountRoleText"
+    );
+
+  if (accountRoleText) {
+
+    const userName =
+      localStorage.getItem(
+        "aqila_name"
+      ) || "Pengguna";
+
+    accountRoleText.innerText =
+      userName;
+  }
+
   document.body.classList.remove(
     "player-mode",
+    "vocal-mode",
     "lainnya-mode"
   );
 
@@ -609,19 +705,31 @@ function showApp(role) {
 
   appPage.classList.remove("hidden");
 
-  if (role === "player") {
+const badgeMap = {
 
-    roleBadge.innerText =
-      "PLAYER";
+  player:
+    "PLAYER",
 
-    roleBadge.style.display =
-      "inline-flex";
+  vocal:
+    "VOCAL",
 
-  } else {
+  lainnya:
+    "GUEST"
+};
 
-    roleBadge.style.display =
-      "none";
-  }
+if (badgeMap[role]) {
+
+  roleBadge.innerText =
+    badgeMap[role];
+
+  roleBadge.style.display =
+    "inline-flex";
+
+} else {
+
+  roleBadge.style.display =
+    "none";
+}
 
   loadSongData(role);
 
@@ -1526,28 +1634,329 @@ navBtns.forEach(btn => {
   );
 });
 
-logoutBtn.addEventListener(
-  "click",
-  () => {
+const accountRoleText =
+  document.getElementById(
+    "accountRoleText"
+  );
 
-    const confirmLogout =
-      confirm(
-        "Yakin ingin logout?"
+const googleSearchForm =
+  document.getElementById(
+    "googleSearchForm"
+  );
+
+const googleSearchInput =
+  document.getElementById(
+    "googleSearchInput"
+  );
+
+const openSpreadsheetBtn =
+  document.getElementById(
+    "openSpreadsheetBtn"
+  );
+
+const googlePlaceholders = [
+  "Lirik Lagu Kerinduan",
+  "Chordtela Lagu Gelandangan"
+];
+
+let googlePlaceholderIndex = 0;
+let googleTypingTimer = null;
+
+function resetGooglePlaceholder() {
+  clearTimeout(googleTypingTimer);
+
+  if (!googleSearchInput) return;
+
+  googleSearchInput.placeholder =
+    "Cari di Google...";
+
+  googleTypingTimer =
+    setTimeout(showGoogleSuggestion, 5000);
+}
+
+function showGoogleSuggestion() {
+  if (!googleSearchInput) return;
+
+  if (
+    document.activeElement === googleSearchInput ||
+    googleSearchInput.value.trim() !== ""
+  ) {
+    resetGooglePlaceholder();
+    return;
+  }
+
+  const text =
+    googlePlaceholders[googlePlaceholderIndex];
+
+  googleSearchInput.placeholder = "";
+
+  let charIndex = 0;
+
+  function typeText() {
+    if (
+      document.activeElement === googleSearchInput ||
+      googleSearchInput.value.trim() !== ""
+    ) {
+      resetGooglePlaceholder();
+      return;
+    }
+
+    charIndex++;
+
+    googleSearchInput.placeholder =
+      text.substring(0, charIndex);
+
+    if (charIndex < text.length) {
+      googleTypingTimer =
+        setTimeout(typeText, 80);
+      return;
+    }
+
+    googleTypingTimer =
+      setTimeout(() => {
+        googleSearchInput.placeholder =
+          "Cari di Google...";
+
+        googlePlaceholderIndex =
+          (googlePlaceholderIndex + 1) %
+          googlePlaceholders.length;
+
+        googleTypingTimer =
+          setTimeout(showGoogleSuggestion, 5000);
+      }, 3000);
+  }
+
+  typeText();
+}
+
+if (googleSearchInput) {
+  googleSearchInput.addEventListener(
+    "focus",
+    resetGooglePlaceholder
+  );
+
+  googleSearchInput.addEventListener(
+    "input",
+    resetGooglePlaceholder
+  );
+}
+
+const accountNavBtn =
+  document.getElementById("accountNavBtn");
+
+if (accountNavBtn) {
+  accountNavBtn.addEventListener(
+    "click",
+    resetGooglePlaceholder
+  );
+}
+
+resetGooglePlaceholder();
+
+if (googleSearchForm) {
+
+  googleSearchForm.addEventListener(
+    "submit",
+    (e) => {
+
+      e.preventDefault();
+
+      const keyword =
+        googleSearchInput.value.trim();
+
+      if (!keyword) {
+        alert("Masukkan kata pencarian");
+        return;
+      }
+
+      window.open(
+        `https://www.google.com/search?q=${encodeURIComponent(keyword)}`,
+        "_blank"
+      );
+    }
+  );
+}
+
+if (openSpreadsheetBtn) {
+
+  openSpreadsheetBtn.addEventListener(
+    "click",
+    async () => {
+
+      const originalText =
+        openSpreadsheetBtn.innerHTML;
+
+      openSpreadsheetBtn.disabled =
+        true;
+
+      openSpreadsheetBtn.innerHTML =
+        `
+        <i
+          class="
+          ri-loader-4-line
+          rotating
+          "
+        ></i>
+
+        Memuat...
+        `;
+
+      try {
+
+        const response =
+          await fetch(
+            SCRIPT_URL,
+            {
+              method: "POST",
+
+              body: JSON.stringify({
+                action: "config"
+              })
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !data.spreadsheetUrl
+        ) {
+
+          alert(
+            "Link spreadsheet belum tersedia"
+          );
+
+          return;
+        }
+
+        window.open(
+          data.spreadsheetUrl,
+          "_blank"
+        );
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+        alert(
+          "Gagal membuka spreadsheet"
+        );
+
+      } finally {
+
+        openSpreadsheetBtn
+          .disabled = false;
+
+        openSpreadsheetBtn
+          .innerHTML =
+            originalText;
+      }
+    }
+  );
+}
+
+if (logoutBtn) {
+
+  logoutBtn.addEventListener(
+    "click",
+    () => {
+
+      const confirmLogout =
+        confirm(
+          "Yakin ingin logout?"
+        );
+
+      if (!confirmLogout) return;
+
+      if (
+        localStorage.getItem(
+          "aqila_remember"
+        ) !== "true"
+      ) {
+
+        localStorage.removeItem(
+          "aqila_role"
+        );
+
+        localStorage.removeItem(
+          "aqila_name"
+        );
+      }
+
+      localStorage.removeItem(
+        "aqila_last_active"
       );
 
-    if (!confirmLogout) return;
+      localStorage.setItem(
+        "aqila_logged_out",
+        "true"
+      );
 
-    localStorage.removeItem(
-      "aqila_role"
-    );
-
-    location.reload();
-  }
-);
+      location.reload();
+    }
+  );
+}
 
 window.addEventListener(
   "load",
   () => {
+
+    if (
+
+      localStorage.getItem(
+        "aqila_remember"
+      ) === "true"
+
+    ) {
+
+      document.getElementById(
+        "rememberMe"
+      ).checked = true;
+
+      const savedName =
+        localStorage.getItem(
+          "aqila_name"
+        );
+
+      if (savedName) {
+
+        document.getElementById(
+          "nameInput"
+        ).value =
+          savedName;
+      }
+
+      const savedRole =
+        localStorage.getItem(
+          "aqila_role"
+        );
+
+      if (savedRole) {
+
+        document.getElementById(
+          "role"
+        ).value =
+          savedRole;
+
+        document.getElementById(
+          "selectedText"
+        ).innerText = {
+
+          player:
+            "Player",
+
+          vocal:
+            "Vocal",
+
+          lainnya:
+            "Lainnya"
+
+        }[savedRole];
+      }
+
+    }
 
     const role =
       localStorage.getItem(
@@ -1587,7 +1996,15 @@ window.addEventListener(
       }
     }
 
-    if (role) {
+    if (
+      role &&
+      localStorage.getItem(
+        "aqila_last_active"
+      ) &&
+      localStorage.getItem(
+        "aqila_logged_out"
+      ) !== "true"
+    ) {
 
       showApp(role);
 
@@ -1719,7 +2136,8 @@ if (
 
     const roleLabel = {
       player: "Player",
-      lainnya: "Lainnya"
+      vocal: "Vocal",
+      lainnya: "Guest"
     };
 
     try {
@@ -1748,7 +2166,9 @@ if (
               catatan,
 
               requestBy:
-                roleLabel[role]
+              `${localStorage.getItem(
+                "aqila_name"
+              )} (${roleLabel[role]})`
             })
           }
         );
@@ -1993,7 +2413,6 @@ options.forEach(option => {
       roleInput.value =
         value;
 
-      // 🔒 lock interaction
       customSelect.classList.add(
         "closing"
       );
@@ -2640,3 +3059,110 @@ window.addEventListener(
     );
   }
 );
+
+const versionBtn =
+  document.getElementById(
+    "versionBtn"
+  );
+
+if (versionBtn) {
+
+  versionBtn.addEventListener(
+    "click",
+    () => {
+
+      alert(
+        `AQILA MUSIC\nVersi ${APP_VERSION}`
+      );
+
+    }
+  );
+}
+
+const changePasswordBtn =
+  document.getElementById(
+    "changePasswordBtn"
+  );
+
+if (changePasswordBtn) {
+
+  changePasswordBtn
+    .addEventListener(
+      "click",
+      () => {
+
+        alert(
+          "Ubah password belum tersedia."
+        );
+
+      }
+    );
+}
+
+const printSongBtn =
+  document.getElementById(
+    "printSongBtn"
+  );
+
+if (printSongBtn) {
+
+  printSongBtn.addEventListener(
+    "click",
+    () => {
+
+      if (
+        !allSongData ||
+        allSongData.length === 0
+      ) {
+
+        alert(
+          "Daftar lagu belum dimuat"
+        );
+
+        return;
+      }
+
+      window.print();
+    }
+  );
+}
+
+const nameInput =
+  document.getElementById(
+    "nameInput"
+  );
+
+if (nameInput) {
+
+  nameInput.addEventListener(
+    "input",
+
+    function () {
+
+      this.value =
+
+        this.value
+
+        .replace(
+          /[^A-Za-z\s]/g,
+          ""
+        )
+
+        .replace(
+          /^\s+/,
+          ""
+        )
+
+        .replace(
+          /\s{2,}/g,
+          " "
+        )
+
+        .slice(
+          0,
+          15
+        );
+
+    }
+  );
+}
