@@ -698,6 +698,16 @@ try {
       return;
     }
 
+    data.sort((a, b) => {
+      const laguA =
+        (a["Nama Lagu"] || "").toLowerCase();
+
+      const laguB =
+        (b["Nama Lagu"] || "").toLowerCase();
+
+      return laguA.localeCompare(laguB, "id");
+    });
+
     const newData =
       JSON.stringify(data);
 
@@ -705,27 +715,7 @@ try {
       JSON.stringify(allSongData);
 
     if (newData !== oldData) {
-
       allSongData = data;
-
-      allSongData.sort(
-        (a, b) => {
-
-          const laguA =
-            (a["Nama Lagu"] || "")
-              .toLowerCase();
-
-          const laguB =
-            (b["Nama Lagu"] || "")
-              .toLowerCase();
-
-          return laguA.localeCompare(
-            laguB,
-            "id"
-          );
-        }
-      );
-
       applySongFilter();
     }
 
@@ -750,6 +740,14 @@ songLoaded = true;
 }
 
 function renderTable(data, role) {
+
+  const scrollPositions = {};
+
+  document
+    .querySelectorAll("#songTables .table-responsive")
+    .forEach((el, index) => {
+      scrollPositions[index] = el.scrollLeft;
+    });
 
   const categories = [
     "Trend 2026",
@@ -943,6 +941,16 @@ const value =
 
     songTables.appendChild(card);
   });
+
+    setTimeout(() => {
+    document
+      .querySelectorAll("#songTables .table-responsive")
+      .forEach((el, index) => {
+        if (scrollPositions[index] !== undefined) {
+          el.scrollLeft = scrollPositions[index];
+        }
+      });
+  }, 0);
 }
 
 if (songSearch) {
@@ -1045,12 +1053,21 @@ if (!requestLoaded) {
 
   if (Array.isArray(data)) {
 
-    allRequestData = data;
-    requestLoaded = true;
+    const newData =
+      JSON.stringify(data);
 
-    renderRequestTable(
-      allRequestData
-    );
+    const oldData =
+      JSON.stringify(allRequestData);
+
+    if (newData !== oldData) {
+      allRequestData = data;
+
+      renderRequestTable(
+        allRequestData
+      );
+    }
+
+    requestLoaded = true;
   }
 
   } catch (error) {
@@ -1093,6 +1110,9 @@ function renderRequestTable(data) {
     document.querySelector(
       "#requestSection .table-responsive"
     );
+  
+  const savedScrollLeft =
+  requestTable.scrollLeft;
 
 requestTable.innerHTML = `
   <table>
@@ -1280,6 +1300,11 @@ if (requestSortMode === "newest") {
   renderRequestPagination(
     data.length
   );
+
+  setTimeout(() => {
+    requestTable.scrollLeft =
+      savedScrollLeft;
+  }, 0);
 }
 
 function renderRequestPagination(totalItems) {
