@@ -3740,26 +3740,30 @@ if (printSongBtn) {
 
       const restorePrintMode = () => {
 
-        isPrintMode = false;
+        setTimeout(() => {
 
-        document.body.classList.remove(
-          "print-mode"
-        );
+          isPrintMode = false;
 
-        currentSongPage =
-          savedSongPage;
+          document.body.classList.remove(
+            "print-mode"
+          );
 
-        applySongFilter();
+          currentSongPage =
+            savedSongPage;
 
-        window.scrollTo(
-          0,
-          savedScrollY
-        );
+          applySongFilter();
 
-        window.removeEventListener(
-          "afterprint",
-          restorePrintMode
-        );
+          window.scrollTo(
+            0,
+            savedScrollY
+          );
+
+          window.removeEventListener(
+            "afterprint",
+            restorePrintMode
+          );
+
+        }, window.innerWidth <= 768 ? 4000 : 500);
       };
 
       window.addEventListener(
@@ -3767,11 +3771,11 @@ if (printSongBtn) {
         restorePrintMode
       );
 
-      requestAnimationFrame(() => {
+      setTimeout(() => {
 
         window.print();
 
-      });
+      }, window.innerWidth <= 768 ? 800 : 150);
     }
   );
 }

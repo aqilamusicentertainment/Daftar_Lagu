@@ -2857,6 +2857,19 @@ body.print-mode .pagination {
   display: none !important;
 }
 
+body.player-mode #dashboardSection th:nth-child(6) {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+body.player-mode #dashboardSection td:nth-child(6) {
+  text-align: justify !important;
+}
+
+body.player-mode #dashboardSection td:nth-child(6).note-empty {
+  text-align: center !important;
+}
+
 @media print {
 
   * {
@@ -3134,18 +3147,31 @@ body.print-mode .pagination {
     text-align: center !important;
     white-space: nowrap !important;
   }
+
+  body.player-mode #dashboardSection table {
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  body.player-mode #dashboardSection tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.player-mode #dashboardSection th,
+  body.player-mode #dashboardSection td {
+    font-size: 8.5px !important;
+    padding: 3px 4px !important;
+    line-height: 1.25 !important;
+  }
+
+  body.player-mode #dashboardSection td:nth-child(1) {
+    white-space: nowrap !important;
+  }
+
+  body.player-mode #dashboardSection td:nth-child(6) {
+    white-space: normal !important;
+  }
 }
 
-body.player-mode #dashboardSection th:nth-child(6) {
-  text-align: center !important;
-  vertical-align: middle !important;
-}
-
-body.player-mode #dashboardSection td:nth-child(6) {
-  text-align: justify !important;
-}
-
-body.player-mode #dashboardSection td:nth-child(6).note-empty {
-  text-align: center !important;
-}
 
