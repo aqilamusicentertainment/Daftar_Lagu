@@ -2149,12 +2149,9 @@ if (youtubeSearchForm) {
       }
 
       const url =
-
         window.innerWidth <= 768
-
-          ? `https://poketube.fun/app?mobilesearch=${encodeURIComponent(keyword)}`
-
-          : `https://poketube.fun/search?query=${encodeURIComponent(keyword)}`;
+          ? `https://m.youtube.com/results?search_query=${encodeURIComponent(keyword)}`
+          : `https://www.youtube.com/results?search_query=${encodeURIComponent(keyword)}`;
 
       window.open(
         url,
