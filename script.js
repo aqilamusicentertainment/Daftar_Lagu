@@ -3773,31 +3773,6 @@ if (printSongBtn) {
 
         if (isMobilePrint) {
 
-          const restoreAfterReturn = () => {
-
-            if (
-              document.visibilityState ===
-              "visible"
-            ) {
-
-              setTimeout(() => {
-
-                restorePrintMode();
-
-              }, 1500);
-
-              document.removeEventListener(
-                "visibilitychange",
-                restoreAfterReturn
-              );
-            }
-          };
-
-          document.addEventListener(
-            "visibilitychange",
-            restoreAfterReturn
-          );
-
           setTimeout(() => {
 
             document.addEventListener(
@@ -3806,7 +3781,7 @@ if (printSongBtn) {
               { once: true }
             );
 
-          }, 10000);
+          }, 8000);
         }
 
       }, isMobilePrint ? 1500 : 150);
