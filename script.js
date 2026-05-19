@@ -2130,6 +2130,212 @@ if (youtubeIcon) {
 
 }
 
+const YT_SEARCH_CHOICE_KEY =
+  "aqila_yt_search_choice";
+
+function getYoutubeSearchUrl(keyword) {
+
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(keyword)}&app=desktop`;
+}
+
+function getPokeTubeSearchUrl(keyword) {
+
+  const q =
+    encodeURIComponent(keyword);
+
+  return window.innerWidth <= 768
+
+    ? `https://poketube.fun/app?mobilesearch=${q}`
+
+    : `https://poketube.fun/search?query=${q}`;
+}
+
+function openYoutubeSearchByChoice(choice, keyword) {
+
+  const url =
+    choice === "poketube"
+      ? getPokeTubeSearchUrl(keyword)
+      : getYoutubeSearchUrl(keyword);
+
+  window.open(
+    url,
+    "_blank"
+  );
+}
+
+function showYoutubeChoiceModal(keyword) {
+
+  const oldModal =
+    document.getElementById(
+      "ytChoiceModal"
+    );
+
+  if (oldModal) {
+    oldModal.remove();
+  }
+
+  const modal =
+    document.createElement("div");
+
+  modal.id =
+    "ytChoiceModal";
+
+  modal.className =
+    "yt-choice-modal";
+
+  modal.innerHTML = `
+    <div class="yt-choice-overlay"></div>
+
+    <div class="yt-choice-box">
+
+      <button
+        type="button"
+        class="yt-choice-close"
+        id="ytChoiceClose"
+      >
+        <i class="ri-close-line"></i>
+      </button>
+
+      <div class="yt-choice-icon">
+        <i class="ri-youtube-fill"></i>
+      </div>
+
+      <h3>
+        Buka Pencarian
+      </h3>
+
+      <p>
+        Pilih mau buka lewat YouTube atau PokeTube.
+      </p>
+
+      <div class="yt-choice-actions">
+
+        <button
+          type="button"
+          class="yt-choice-btn youtube"
+          data-choice="youtube"
+        >
+          <i class="ri-youtube-fill"></i>
+          YouTube
+        </button>
+
+        <button
+          type="button"
+          class="yt-choice-btn poketube"
+          data-choice="poketube"
+        >
+          <i class="ri-play-circle-line"></i>
+          PokeTube
+        </button>
+
+      </div>
+
+      <label class="yt-choice-remember">
+
+        <input
+          type="checkbox"
+          id="ytChoiceRemember"
+        >
+
+        <span>
+          Jangan tanya lagi
+        </span>
+
+      </label>
+
+    </div>
+  `;
+
+  document.body.appendChild(
+    modal
+  );
+
+  const remember =
+    document.getElementById(
+      "ytChoiceRemember"
+    );
+
+  modal
+    .querySelectorAll(
+      ".yt-choice-btn"
+    )
+    .forEach(btn => {
+
+      btn.addEventListener(
+        "click",
+        () => {
+
+          const choice =
+            btn.dataset.choice;
+
+          if (remember.checked) {
+
+            localStorage.setItem(
+              YT_SEARCH_CHOICE_KEY,
+              choice
+            );
+          }
+
+          openYoutubeSearchByChoice(
+            choice,
+            keyword
+          );
+
+          modal.remove();
+        }
+      );
+    });
+
+  document
+    .getElementById(
+      "ytChoiceClose"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        modal.remove();
+      }
+    );
+
+  modal
+    .querySelector(
+      ".yt-choice-overlay"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        modal.remove();
+      }
+    );
+}
+
+function handleYoutubeSearch(keyword) {
+
+  const savedChoice =
+    localStorage.getItem(
+      YT_SEARCH_CHOICE_KEY
+    );
+
+  if (
+    savedChoice === "youtube" ||
+    savedChoice === "poketube"
+  ) {
+
+    openYoutubeSearchByChoice(
+      savedChoice,
+      keyword
+    );
+
+    return;
+  }
+
+  showYoutubeChoiceModal(
+    keyword
+  );
+}
+
 if (youtubeSearchForm) {
 
   youtubeSearchForm.addEventListener(
@@ -2148,12 +2354,8 @@ if (youtubeSearchForm) {
         return;
       }
 
-      const url =
-        `https://www.youtube.com/results?search_query=${encodeURIComponent(keyword)}&app=desktop`;
-
-      window.open(
-        url,
-        "_blank"
+      handleYoutubeSearch(
+        keyword
       );
     }
   );
@@ -2476,6 +2678,10 @@ if (logoutBtn) {
 
       localStorage.removeItem(
         "aqila_last_active"
+      );
+
+      localStorage.removeItem(
+        "aqila_yt_search_choice"
       );
 
       localStorage.setItem(
@@ -3711,7 +3917,7 @@ function getPrintFileName() {
   const time =
     `${pad(now.getHours())}.${pad(now.getMinutes())}`;
 
-  return `AQILA Music - Daftar Lagu - ${date} ${time}`;
+  return `AQiLa Music - Daftar Lagu - ${date} ${time}`;
 }
 
 const printSongBtn =
