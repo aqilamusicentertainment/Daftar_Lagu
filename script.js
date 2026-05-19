@@ -485,8 +485,6 @@ if (requestSearchIcon) {
       renderRequestTable(
         allRequestData
       );
-
-      requestSearch.focus();
     }
   );
 }
@@ -984,6 +982,146 @@ songLoaded = true;
   }
 }
 
+function getDefaultSongLink(songName) {
+
+  const role =
+    getActiveRole();
+
+  const keyword =
+    role === "player"
+      ? "chordtela " + songName
+      : "lirik " + songName;
+
+  return `https://www.google.com/search?q=${encodeURIComponent(
+    keyword
+  )}`;
+}
+
+function normalizeSongLink(link) {
+
+  const value =
+    String(link || "").trim();
+
+  if (!value) return "";
+
+  if (
+    value.startsWith("http://") ||
+    value.startsWith("https://")
+  ) {
+
+    return value;
+  }
+
+  return `https://${value}`;
+}
+
+function showSongLinkModal(songName, customLink) {
+
+  const oldModal =
+    document.getElementById(
+      "songLinkModal"
+    );
+
+  if (oldModal) {
+    oldModal.remove();
+  }
+
+  const finalLink =
+    normalizeSongLink(customLink) ||
+    getDefaultSongLink(songName);
+
+  const role =
+    getActiveRole();
+
+  const songActionButton =
+    role === "player"
+      ? "Buka Chord"
+      : "Buka Lirik";
+
+  const modal =
+    document.createElement("div");
+
+  modal.id =
+    "songLinkModal";
+
+  modal.className =
+    "yt-choice-modal";
+
+  modal.innerHTML = `
+    <div class="yt-choice-overlay"></div>
+
+    <div class="yt-choice-box">
+
+      <button
+        type="button"
+        class="yt-choice-close"
+        id="songLinkClose"
+      >
+        <i class="ri-close-line"></i>
+      </button>
+
+      <div class="yt-choice-icon">
+        <i class="ri-music-2-fill"></i>
+      </div>
+
+      <h3>
+        Akses Lagu
+      </h3>
+
+      <p>
+        ${songName}
+      </p>
+
+      <div class="song-link-actions">
+
+        <button
+          type="button"
+          class="song-link-btn"
+          id="songLinkOpen"
+        >
+          <i class="ri-search-eye-line"></i>
+          ${songActionButton}
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(
+    modal
+  );
+
+  document
+    .getElementById(
+      "songLinkOpen"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        window.open(
+          finalLink,
+          "_blank"
+        );
+
+        modal.remove();
+      }
+    );
+
+  document
+    .getElementById(
+      "songLinkClose"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        modal.remove();
+      }
+    );
+}
+
 function renderTable(data, role) {
 
   role =
@@ -1224,7 +1362,32 @@ const value =
         if (key === "Nama Lagu") {
 
           td.classList.add(
-            "text-left"
+            "text-left",
+            "song-title-link"
+          );
+
+          td.title =
+            "Klik untuk membuka link lagu";
+
+          td.addEventListener(
+            "click",
+            () => {
+
+              const songName =
+                String(value || "").trim();
+
+              if (
+                !songName ||
+                songName === "-"
+              ) return;
+
+              showSongLinkModal(
+                songName,
+                item["Link"] ||
+                item["LINK"] ||
+                item["link"]
+              );
+            }
           );
         }
 
@@ -1325,8 +1488,6 @@ if (songSearchIcon) {
       currentSongKeyword = "";
 
       applySongFilter();
-
-      songSearch.focus();
     }
   );
 }
@@ -1570,6 +1731,29 @@ requestBody =
     });
   }
 
+  if (data.length === 0) {
+
+    requestTable.classList.add(
+      "table-empty"
+    );
+
+    requestTable.innerHTML = `
+      <div class="empty-state">
+
+        Request tidak ditemukan
+
+      </div>
+    `;
+
+    document
+      .getElementById(
+        "requestPagination"
+      )
+      .classList.add("hidden");
+
+    return;
+  }
+
   data = [...data];
 
   data.sort((a, b) => {
@@ -1648,7 +1832,32 @@ requestBody =
       if (key === "Nama Lagu") {
 
         td.classList.add(
-          "text-left"
+          "text-left",
+          "song-title-link"
+        );
+
+        td.title =
+          "Klik untuk membuka link lagu";
+
+        td.addEventListener(
+          "click",
+          () => {
+
+            const songName =
+              String(value || "").trim();
+
+            if (
+              !songName ||
+              songName === "-"
+            ) return;
+
+            showSongLinkModal(
+              songName,
+              item["Link"] ||
+              item["LINK"] ||
+              item["link"]
+            );
+          }
         );
       }
 
@@ -2173,9 +2382,6 @@ if (googleIcon) {
       googleSearchInput.value = "";
 
       resetGooglePlaceholder();
-
-      googleSearchInput.focus();
-
     }
 
   );
@@ -2187,10 +2393,24 @@ const openSpreadsheetBtn =
     "openSpreadsheetBtn"
   );
 
-const googlePlaceholders = [
-  "Lirik Lagu Kerinduan",
-  "Chordtela Lagu Gelandangan"
-];
+function getGooglePlaceholders() {
+
+  const role =
+    getActiveRole();
+
+  if (role === "player") {
+
+    return [
+      "Chordtela Lagu Kerinduan",
+      "Chordtela Lagu Gelandangan"
+    ];
+  }
+
+  return [
+    "Lirik Lagu Kerinduan",
+    "Lirik Lagu Gelandangan"
+  ];
+}
 
 const youtubeSearchForm =
   document.getElementById(
@@ -2221,9 +2441,6 @@ if (youtubeIcon) {
       youtubeSearchInput.value = "";
 
       resetYoutubePlaceholder();
-
-      youtubeSearchInput.focus();
-
     }
 
   );
@@ -2564,8 +2781,14 @@ function showGoogleSuggestion() {
     return;
   }
 
+  const googlePlaceholders =
+    getGooglePlaceholders();
+
   const text =
-    googlePlaceholders[googlePlaceholderIndex];
+    googlePlaceholders[
+      googlePlaceholderIndex %
+      googlePlaceholders.length
+    ];
 
   googleSearchInput.placeholder = "";
 
