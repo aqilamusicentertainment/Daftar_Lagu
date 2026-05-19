@@ -1175,9 +1175,7 @@ const value =
     document
       .querySelectorAll("#songTables .table-responsive")
       .forEach((el, index) => {
-        if (scrollPositions[index] !== undefined) {
-          el.scrollLeft = scrollPositions[index];
-        }
+        el.scrollLeft = 0;
       });
   }, 0);
 }
@@ -1365,7 +1363,7 @@ function renderRequestTable(data) {
     );
   
   const savedScrollLeft =
-  requestTable.scrollLeft;
+    0;
 
 requestTable.innerHTML = `
   <table>
