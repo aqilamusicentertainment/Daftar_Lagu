@@ -2149,9 +2149,7 @@ if (youtubeSearchForm) {
       }
 
       const url =
-        window.innerWidth <= 768
-          ? `https://m.youtube.com/results?search_query=${encodeURIComponent(keyword)}`
-          : `https://www.youtube.com/results?search_query=${encodeURIComponent(keyword)}`;
+        `https://www.youtube.com/results?search_query=${encodeURIComponent(keyword)}&app=desktop`;
 
       window.open(
         url,
