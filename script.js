@@ -3697,6 +3697,23 @@ if (changePasswordBtn) {
     );
 }
 
+function getPrintFileName() {
+
+  const now =
+    new Date();
+
+  const pad = (num) =>
+    String(num).padStart(2, "0");
+
+  const date =
+    `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const time =
+    `${pad(now.getHours())}.${pad(now.getMinutes())}`;
+
+  return `AQILA Music - Daftar Lagu - ${date} ${time}`;
+}
+
 const printSongBtn =
   document.getElementById(
     "printSongBtn"
@@ -3725,6 +3742,12 @@ if (printSongBtn) {
 
       const savedScrollY =
         window.scrollY;
+
+      const oldTitle =
+        document.title;
+
+      document.title =
+        getPrintFileName();
 
       const isMobilePrint =
         window.innerWidth <= 768;
@@ -3756,6 +3779,9 @@ if (printSongBtn) {
           0,
           savedScrollY
         );
+
+        document.title =
+          oldTitle;
       };
 
       if (!isMobilePrint) {
