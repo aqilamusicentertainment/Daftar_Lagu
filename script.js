@@ -1707,8 +1707,16 @@ if (youtubeSearchForm) {
         return;
       }
 
+      const url =
+
+        window.innerWidth <= 768
+
+          ? `https://poketube.fun/app?mobilesearch=${encodeURIComponent(keyword)}`
+
+          : `https://poketube.fun/search?query=${encodeURIComponent(keyword)}`;
+
       window.open(
-        `https://poketube.fun/search?query=${encodeURIComponent(keyword)}`,
+        url,
         "_blank"
       );
     }
