@@ -3029,6 +3029,16 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
     white-space: nowrap !important;
   }
 
+  body.player-mode #dashboardSection thead tr {
+    border-bottom: 1px solid #000 !important;
+  }
+  
+  body.player-mode #dashboardSection thead,
+  body.player-mode #dashboardSection thead tr,
+  body.player-mode #dashboardSection thead th {
+    border-color: #000 !important;
+  }
+
   .category-label {
     color: #000 !important;
     font-size: 14px !important;
