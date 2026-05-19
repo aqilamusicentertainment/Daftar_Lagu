@@ -1924,14 +1924,19 @@ body.player-mode #dashboardSection td:nth-child(4) {
 .notif-box {
   position: relative;
 
-  width: min(96%, 520px);
+  width:
+    min(
+      96vw,
+      520px,
+      calc(90vh * 3 / 4)
+    );
 
   aspect-ratio: 3 / 4;
 
   border-radius: 28px;
 
   overflow: hidden;
-
+  
   background: var(--card);
 
   animation:

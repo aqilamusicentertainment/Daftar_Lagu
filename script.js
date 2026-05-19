@@ -2,9 +2,10 @@ const APP_VERSION =
   "1.1.0";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyTnWK2JCJqYkliveM9ae1QgwmJzTJKf685zsWsNZa4ZuMt-FL1nWw2MzQsG_MwCtuC/exec";
+  "https://script.google.com/macros/s/AKfycbyOdutxwwRKU4rHKg58l2GLZ0yBRadCQ7EWCImcafIFU731efq3flrs5JZs8Km2WN4y/exec";
 
 let currentRequestPage = 1;
+let currentSongPage = {};
 
 let allSongData = [];
 let songLoaded = false;
@@ -236,19 +237,44 @@ document.addEventListener(
   }
 );
 
-function getItemsPerPage() {
+function getSongItemsPerPage() {
 
   const h =
     window.innerHeight;
+
+  if (h <= 750) {
+    return 6;
+  }
+
+  if (h <= 850) {
+    return 8;
+  }
+
+  if (h <= 950) {
+    return 10;
+  }
+
+  return 12;
+}
+
+
+function getRequestItemsPerPage() {
+
+  const h =
+    window.innerHeight;
+
   if (h <= 700) {
     return 5;
   }
+
   if (h <= 800) {
     return 7;
   }
+
   if (h <= 900) {
     return 8;
   }
+
   return 10;
 }
 
@@ -995,8 +1021,33 @@ function renderTable(data, role) {
       return;
     }
 
+    const totalPages =
+      Math.ceil(
+        filteredData.length /
+        getSongItemsPerPage()
+      );
+
+    const page =
+      Math.min(
+        currentSongPage[category] || 1,
+        totalPages || 1
+      );
+
+    currentSongPage[category] =
+      page;
+
+    const start =
+      (page - 1)
+      * getSongItemsPerPage();
+
+    const end =
+      start + getSongItemsPerPage();
+
     const paginatedData =
-      filteredData;
+      filteredData.slice(
+        start,
+        end
+      );
 
     const table =
       document.createElement("table");
@@ -1097,7 +1148,27 @@ const value =
 
     card.appendChild(wrapper);
 
-    songTables.appendChild(card);
+    const pagination =
+      document.createElement(
+        "div"
+      );
+
+    pagination.className =
+      "pagination";
+
+    card.appendChild(
+      pagination
+    );
+
+    renderSongPagination(
+      pagination,
+      filteredData.length,
+      category
+    );
+
+    songTables.appendChild(
+      card
+    );
   });
 
     setTimeout(() => {
@@ -1121,6 +1192,8 @@ if (songSearch) {
         songSearch.value
           .toLowerCase()
           .trim();
+      
+      currentSongPage = {};
 
       applySongFilter();
 
@@ -1407,12 +1480,24 @@ requestBody =
     return timeA - timeB;
   });
 
+  const totalRequestPages =
+    Math.ceil(
+      data.length /
+      getRequestItemsPerPage()
+    );
+
+  currentRequestPage =
+    Math.min(
+      currentRequestPage,
+      totalRequestPages || 1
+    );
+
   const start =
     (currentRequestPage - 1)
-    * getItemsPerPage();
+    * getRequestItemsPerPage();
 
   const end =
-    start + getItemsPerPage();
+    start + getRequestItemsPerPage();
 
   const paginatedData =
     data.slice(start, end);
@@ -1497,6 +1582,223 @@ requestBody =
   }, 0);
 }
 
+function renderSongPagination(
+  pagination,
+  totalItems,
+  category
+) {
+
+  pagination.innerHTML =
+    "";
+
+  const totalPages =
+    Math.ceil(
+      totalItems /
+        getSongItemsPerPage()
+    );
+
+  if (
+    totalPages <= 1
+  ) {
+
+    pagination.classList.add(
+      "hidden"
+    );
+
+    return;
+  }
+
+  pagination.classList.remove(
+    "hidden"
+  );
+
+  const currentPage =
+    currentSongPage[
+      category
+    ] || 1;
+
+  function goToSongPage(
+    page
+  ) {
+
+    const oldScrollY =
+      window.scrollY;
+
+    currentSongPage[
+      category
+    ] = page;
+
+    applySongFilter();
+
+    window.scrollTo(
+      0,
+      oldScrollY
+    );
+
+  requestAnimationFrame(() => {
+
+    const card =
+      [...document.querySelectorAll(
+        "#songTables .table-card"
+      )]
+      .find(card =>
+        card.textContent.includes(
+          category
+        )
+      );
+
+    if (!card) return;
+
+    const y =
+      card.getBoundingClientRect()
+        .top +
+      window.scrollY -
+      90;
+
+    window.scrollTo({
+      top: y,
+      behavior: "smooth"
+    });
+
+  });
+}
+  const prev =
+    document.createElement(
+      "button"
+    );
+
+  prev.innerHTML =
+    '<i class="ri-arrow-left-s-line"></i>';
+
+  prev.disabled =
+    currentPage === 1;
+
+  prev.onclick =
+    () =>
+      goToSongPage(
+        currentPage - 1
+      );
+
+  pagination.appendChild(
+    prev
+  );
+
+  addPageButton(1);
+
+  if (
+    currentPage > 2
+  ) {
+
+    addDots();
+  }
+
+  if (
+
+    currentPage !== 1 &&
+
+    currentPage !== totalPages
+
+  ) {
+
+    addPageButton(
+      currentPage
+    );
+  }
+
+  if (
+
+    currentPage <
+
+    totalPages - 1
+
+  ) {
+
+    addDots();
+  }
+
+  if (
+    totalPages > 1
+  ) {
+
+    addPageButton(
+      totalPages
+    );
+  }
+
+  const next =
+    document.createElement(
+      "button"
+    );
+
+  next.innerHTML =
+    '<i class="ri-arrow-right-s-line"></i>';
+
+  next.disabled =
+    currentPage ===
+    totalPages;
+
+  next.onclick =
+    () =>
+      goToSongPage(
+        currentPage + 1
+      );
+
+  pagination.appendChild(
+    next
+  );
+
+  function addPageButton(
+    page
+  ) {
+
+    const btn =
+      document.createElement(
+        "button"
+      );
+
+    btn.innerText =
+      page;
+
+    if (
+      page ===
+      currentPage
+    ) {
+
+      btn.classList.add(
+        "active"
+      );
+    }
+
+    btn.onclick =
+      () =>
+        goToSongPage(
+          page
+        );
+
+    pagination.appendChild(
+      btn
+    );
+  }
+
+  function addDots() {
+
+    const dots =
+      document.createElement(
+        "span"
+      );
+
+    dots.className =
+      "pagination-dots";
+
+    dots.innerText =
+      "...";
+
+    pagination.appendChild(
+      dots
+    );
+  }
+}
+
 function renderRequestPagination(totalItems) {
 
   const pagination =
@@ -1508,10 +1810,14 @@ function renderRequestPagination(totalItems) {
 
   const totalPages =
     Math.ceil(
-      totalItems / getItemsPerPage()
+      totalItems /
+      getRequestItemsPerPage()
     );
 
-  if (totalItems <= getItemsPerPage()) {
+  if (
+    totalItems <=
+    getRequestItemsPerPage()
+  ) {
 
     pagination.classList.add(
       "hidden"
@@ -1658,7 +1964,7 @@ const y =
   target.getBoundingClientRect()
     .top +
   window.pageYOffset +
-  30;
+  35;
 
     window.scrollTo({
       top: y,
@@ -1852,7 +2158,7 @@ if (youtubeSearchForm) {
 
   const youtubePlaceholders = [
     "Karaoke Hadirmu Bagai Mimpi",
-    "Karaoke Lukaku Nada Wanita"
+    "Karaoke Pertemuan Nada Wanita"
   ];
 
   let youtubePlaceholderIndex = 0;
@@ -2323,6 +2629,12 @@ window.addEventListener(
         document
           .getElementById(savedTab)
           .classList.add("active");
+
+        setTimeout(() => {
+
+          scrollToTop();
+
+        }, 100);
       }
     }
   }
@@ -3338,6 +3650,9 @@ window.addEventListener(
     renderRequestTable(
       allRequestData
     );
+
+    applySongFilter();
+
   }
 );
 
