@@ -1318,12 +1318,22 @@ requestBody =
     });
   }
 
-data = [...data];
+  data = [...data];
 
-if (requestSortMode === "newest") {
+  data.sort((a, b) => {
 
-  data.reverse();
-}
+    const timeA =
+      new Date(a["Waktu"]).getTime();
+
+    const timeB =
+      new Date(b["Waktu"]).getTime();
+
+    if (requestSortMode === "newest") {
+      return timeB - timeA;
+    }
+
+    return timeA - timeB;
+  });
 
   const start =
     (currentRequestPage - 1)
@@ -1629,6 +1639,16 @@ navBtns.forEach(btn => {
         .getElementById(target)
         .classList.add("active");
 
+      document
+        .querySelectorAll(
+          ".table-responsive"
+        )
+        .forEach(el => {
+
+          el.scrollLeft = 0;
+
+        });
+
       scrollToTop();
     }
   );
@@ -1658,6 +1678,131 @@ const googlePlaceholders = [
   "Lirik Lagu Kerinduan",
   "Chordtela Lagu Gelandangan"
 ];
+
+const youtubeSearchForm =
+  document.getElementById(
+    "youtubeSearchForm"
+  );
+
+const youtubeSearchInput =
+  document.getElementById(
+    "youtubeSearchInput"
+  );
+
+if (youtubeSearchForm) {
+
+  youtubeSearchForm.addEventListener(
+    "submit",
+    (e) => {
+
+      e.preventDefault();
+
+      const keyword =
+        youtubeSearchInput.value.trim();
+
+      if (!keyword) {
+
+        alert("Masukkan kata pencarian");
+
+        return;
+      }
+
+      window.open(
+        `https://poketube.fun/search?query=${encodeURIComponent(keyword)}`,
+        "_blank"
+      );
+    }
+  );
+
+  const youtubePlaceholders = [
+    "Karaoke Hadirmu Bagai Mimpi",
+    "Karaoke Lukaku Nada Wanita"
+  ];
+
+  let youtubePlaceholderIndex = 0;
+  let youtubeTypingTimer = null;
+
+  function resetYoutubePlaceholder() {
+    clearTimeout(youtubeTypingTimer);
+
+    if (!youtubeSearchInput) return;
+
+    youtubeSearchInput.placeholder =
+      "Cari di YouTube...";
+
+    youtubeTypingTimer =
+      setTimeout(showYoutubeSuggestion, 5000);
+  }
+
+  function showYoutubeSuggestion() {
+    if (!youtubeSearchInput) return;
+
+    if (
+      document.activeElement === youtubeSearchInput ||
+      youtubeSearchInput.value.trim() !== ""
+    ) {
+      resetYoutubePlaceholder();
+      return;
+    }
+
+    const text =
+      youtubePlaceholders[youtubePlaceholderIndex];
+
+    youtubeSearchInput.placeholder = "";
+
+    let charIndex = 0;
+
+    function typeText() {
+      if (
+        document.activeElement === youtubeSearchInput ||
+        youtubeSearchInput.value.trim() !== ""
+      ) {
+        resetYoutubePlaceholder();
+        return;
+      }
+
+      charIndex++;
+
+      youtubeSearchInput.placeholder =
+        text.substring(0, charIndex);
+
+      if (charIndex < text.length) {
+        youtubeTypingTimer =
+          setTimeout(typeText, 80);
+        return;
+      }
+
+      youtubeTypingTimer =
+        setTimeout(() => {
+          youtubeSearchInput.placeholder =
+            "Cari di YouTube...";
+
+          youtubePlaceholderIndex =
+            (youtubePlaceholderIndex + 1) %
+            youtubePlaceholders.length;
+
+          youtubeTypingTimer =
+            setTimeout(showYoutubeSuggestion, 5000);
+        }, 3000);
+    }
+
+    typeText();
+  }
+
+  if (youtubeSearchInput) {
+    youtubeSearchInput.addEventListener(
+      "focus",
+      resetYoutubePlaceholder
+    );
+
+    youtubeSearchInput.addEventListener(
+      "input",
+      resetYoutubePlaceholder
+    );
+  }
+
+  resetYoutubePlaceholder();
+}
 
 let googlePlaceholderIndex = 0;
 let googleTypingTimer = null;
