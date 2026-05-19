@@ -6,6 +6,7 @@ const SCRIPT_URL =
 
 let currentRequestPage = 1;
 let currentSongPage = {};
+let isPrintMode = false;
 
 let allSongData = [];
 let songLoaded = false;
@@ -1021,33 +1022,38 @@ function renderTable(data, role) {
       return;
     }
 
-    const totalPages =
-      Math.ceil(
-        filteredData.length /
-        getSongItemsPerPage()
-      );
+    let paginatedData = filteredData;
 
-    const page =
-      Math.min(
-        currentSongPage[category] || 1,
-        totalPages || 1
-      );
+    if (!isPrintMode) {
 
-    currentSongPage[category] =
-      page;
+      const totalPages =
+        Math.ceil(
+          filteredData.length /
+          getSongItemsPerPage()
+        );
 
-    const start =
-      (page - 1)
-      * getSongItemsPerPage();
+      const page =
+        Math.min(
+          currentSongPage[category] || 1,
+          totalPages || 1
+        );
 
-    const end =
-      start + getSongItemsPerPage();
+      currentSongPage[category] =
+        page;
 
-    const paginatedData =
-      filteredData.slice(
-        start,
-        end
-      );
+      const start =
+        (page - 1)
+        * getSongItemsPerPage();
+
+      const end =
+        start + getSongItemsPerPage();
+
+      paginatedData =
+        filteredData.slice(
+          start,
+          end
+        );
+    }
 
     const table =
       document.createElement("table");
@@ -1148,23 +1154,26 @@ const value =
 
     card.appendChild(wrapper);
 
-    const pagination =
-      document.createElement(
-        "div"
+    if (!isPrintMode) {
+
+      const pagination =
+        document.createElement(
+          "div"
+        );
+
+      pagination.className =
+        "pagination";
+
+      card.appendChild(
+        pagination
       );
 
-    pagination.className =
-      "pagination";
-
-    card.appendChild(
-      pagination
-    );
-
-    renderSongPagination(
-      pagination,
-      filteredData.length,
-      category
-    );
+      renderSongPagination(
+        pagination,
+        filteredData.length,
+        category
+      );
+    }
 
     songTables.appendChild(
       card
@@ -3716,7 +3725,56 @@ if (printSongBtn) {
         return;
       }
 
-      window.print();
+      const savedSongPage =
+        { ...currentSongPage };
+
+      const savedScrollY =
+        window.scrollY;
+
+      isPrintMode = true;
+
+      document.body.classList.add(
+        "print-mode"
+      );
+
+      currentSongPage = {};
+
+      applySongFilter();
+
+      const restorePrintMode = () => {
+
+        isPrintMode = false;
+
+        document.body.classList.remove(
+          "print-mode"
+        );
+
+        currentSongPage =
+          savedSongPage;
+
+        applySongFilter();
+
+        window.scrollTo(
+          0,
+          savedScrollY
+        );
+
+        window.removeEventListener(
+          "afterprint",
+          restorePrintMode
+        );
+      };
+
+      window.addEventListener(
+        "afterprint",
+        restorePrintMode
+      );
+
+      requestAnimationFrame(() => {
+
+        window.print();
+
+      });
     }
   );
 }
