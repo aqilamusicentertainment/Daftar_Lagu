@@ -2,7 +2,7 @@ const APP_VERSION =
   "1.1.1";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxONZg5TIiNgxO1vaZBnd4fSsWTQ67dagu3HP26eiEDVf0gvb2qwjmscot0mPxc909Z/exec";
+  "https://script.google.com/macros/s/AKfycbykwa6b6LVMiyvNN9sY8Ei73dzHVdDPGPU8x7xBiiI5K4X6yEiFyOxmr2TSnvuDCGe8/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -2301,11 +2301,11 @@ function showYoutubeChoiceModal(keyword) {
       </div>
 
       <h3>
-        Buka Pencarian
+        Pilih Pemutar
       </h3>
 
       <p>
-        Pilih mau buka lewat YouTube atau PokeTube.
+        Mau buka hasil pencarian lewat mana?
       </p>
 
       <div class="yt-choice-actions">
@@ -2338,7 +2338,7 @@ function showYoutubeChoiceModal(keyword) {
         >
 
         <span>
-          Jangan tanya lagi
+          Ingat pilihan saya
         </span>
 
       </label>
@@ -2389,18 +2389,6 @@ function showYoutubeChoiceModal(keyword) {
   document
     .getElementById(
       "ytChoiceClose"
-    )
-    .addEventListener(
-      "click",
-      () => {
-
-        modal.remove();
-      }
-    );
-
-  modal
-    .querySelector(
-      ".yt-choice-overlay"
     )
     .addEventListener(
       "click",
@@ -2701,7 +2689,8 @@ if (openSpreadsheetBtn) {
               method: "POST",
 
               body: JSON.stringify({
-                action: "config"
+                action: "config",
+                role: getActiveRole()
               })
             }
           );
@@ -2756,7 +2745,7 @@ if (logoutBtn) {
 
       const confirmLogout =
         confirm(
-          "Yakin ingin logout?"
+          "Yakin ingin keluar?"
         );
 
       if (!confirmLogout) return;

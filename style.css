@@ -1790,7 +1790,7 @@ body.dark .filter-options {
 
 body.player-mode #dashboardSection table {
   width: 100%;
-  min-width: 980px;
+  min-width: 860px;
   table-layout: fixed !important;
 }
 
@@ -2873,7 +2873,7 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
 @media print {
 
   @page {
-    size: A4 landscape;
+    size: A4;
     margin: 8mm;
   }
 
@@ -3047,6 +3047,90 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
 
   .category-dot {
     display: none !important;
+  }
+
+  body.vocal-mode #dashboardSection table,
+  body.lainnya-mode #dashboardSection table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    background: #fff !important;
+  }
+
+  body.vocal-mode #dashboardSection th,
+  body.vocal-mode #dashboardSection td,
+  body.lainnya-mode #dashboardSection th,
+  body.lainnya-mode #dashboardSection td {
+    color: #000 !important;
+    background: #fff !important;
+    border: 1px solid #000 !important;
+    font-size: 8.5px !important;
+    padding: 3px 4px !important;
+    line-height: 1.25 !important;
+    vertical-align: middle !important;
+  }
+
+  body.vocal-mode #dashboardSection th,
+  body.lainnya-mode #dashboardSection th {
+    background: #e5e7eb !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    font-weight: 800 !important;
+  }
+
+  body.vocal-mode #dashboardSection th:first-child,
+  body.vocal-mode #dashboardSection th:last-child,
+  body.lainnya-mode #dashboardSection th:first-child,
+  body.lainnya-mode #dashboardSection th:last-child {
+    border-radius: 0 !important;
+  }
+
+  body.vocal-mode #dashboardSection thead tr,
+  body.lainnya-mode #dashboardSection thead tr {
+    border-bottom: 1px solid #000 !important;
+  }
+
+  body.vocal-mode #dashboardSection th:nth-child(1),
+  body.vocal-mode #dashboardSection td:nth-child(1),
+  body.lainnya-mode #dashboardSection th:nth-child(1),
+  body.lainnya-mode #dashboardSection td:nth-child(1) {
+    width: 55% !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  body.vocal-mode #dashboardSection td:nth-child(1),
+  body.lainnya-mode #dashboardSection td:nth-child(1) {
+    text-align: left !important;
+  }
+
+  body.vocal-mode #dashboardSection th:nth-child(2),
+  body.vocal-mode #dashboardSection td:nth-child(2),
+  body.lainnya-mode #dashboardSection th:nth-child(2),
+  body.lainnya-mode #dashboardSection td:nth-child(2) {
+    width: 40% !important;
+    min-width: 0 !important;
+  }
+
+  body.vocal-mode #dashboardSection th:nth-child(2),
+  body.lainnya-mode #dashboardSection th:nth-child(2) {
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  body.vocal-mode #dashboardSection td:nth-child(2),
+  body.lainnya-mode #dashboardSection td:nth-child(2) {
+    text-align: justify !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+
+  body.vocal-mode #dashboardSection td:nth-child(2).note-empty,
+  body.lainnya-mode #dashboardSection td:nth-child(2).note-empty {
+    text-align: center !important;
+    white-space: nowrap !important;
   }
 }
 
@@ -3316,4 +3400,66 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
 
 .yt-choice-remember span {
   line-height: 1;
+}
+
+body.vocal-mode #dashboardSection table,
+body.lainnya-mode #dashboardSection table {
+  width: 100%;
+  min-width: 520px;
+  table-layout: fixed !important;
+}
+
+body.vocal-mode #dashboardSection th,
+body.lainnya-mode #dashboardSection th {
+  white-space: nowrap !important;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+body.vocal-mode #dashboardSection th:nth-child(1),
+body.vocal-mode #dashboardSection td:nth-child(1),
+body.lainnya-mode #dashboardSection th:nth-child(1),
+body.lainnya-mode #dashboardSection td:nth-child(1) {
+  width: 55% !important;
+  min-width: 300px !important;
+  white-space: nowrap !important;
+}
+
+body.vocal-mode #dashboardSection th:nth-child(1),
+body.lainnya-mode #dashboardSection th:nth-child(1) {
+  text-align: center !important;
+}
+
+body.vocal-mode #dashboardSection td:nth-child(1),
+body.lainnya-mode #dashboardSection td:nth-child(1) {
+  text-align: left !important;
+}
+
+body.vocal-mode #dashboardSection th:nth-child(2),
+body.vocal-mode #dashboardSection td:nth-child(2),
+body.lainnya-mode #dashboardSection th:nth-child(2),
+body.lainnya-mode #dashboardSection td:nth-child(2) {
+  width: 35% !important;
+  min-width: 180px !important;
+}
+
+body.vocal-mode #dashboardSection th:nth-child(2),
+body.lainnya-mode #dashboardSection th:nth-child(2) {
+  text-align: center !important;
+}
+
+body.vocal-mode #dashboardSection td:nth-child(2),
+body.lainnya-mode #dashboardSection td:nth-child(2) {
+  white-space: normal !important;
+  text-align: justify !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.8;
+}
+
+body.vocal-mode #dashboardSection td:nth-child(2).note-empty,
+body.lainnya-mode #dashboardSection td:nth-child(2).note-empty {
+  text-align: center !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
 }
