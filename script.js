@@ -3726,6 +3726,9 @@ if (printSongBtn) {
       const savedScrollY =
         window.scrollY;
 
+      const isMobilePrint =
+        window.innerWidth <= 768;
+
       isPrintMode = true;
 
       document.body.classList.add(
@@ -3738,42 +3741,75 @@ if (printSongBtn) {
 
       const restorePrintMode = () => {
 
-        setTimeout(() => {
+        isPrintMode = false;
 
-          isPrintMode = false;
+        document.body.classList.remove(
+          "print-mode"
+        );
 
-          document.body.classList.remove(
-            "print-mode"
-          );
+        currentSongPage =
+          savedSongPage;
 
-          currentSongPage =
-            savedSongPage;
+        applySongFilter();
 
-          applySongFilter();
-
-          window.scrollTo(
-            0,
-            savedScrollY
-          );
-
-          window.removeEventListener(
-            "afterprint",
-            restorePrintMode
-          );
-
-        }, window.innerWidth <= 768 ? 4000 : 500);
+        window.scrollTo(
+          0,
+          savedScrollY
+        );
       };
 
-      window.addEventListener(
-        "afterprint",
-        restorePrintMode
-      );
+      if (!isMobilePrint) {
+
+        window.addEventListener(
+          "afterprint",
+          restorePrintMode,
+          { once: true }
+        );
+      }
 
       setTimeout(() => {
 
         window.print();
 
-      }, window.innerWidth <= 768 ? 800 : 150);
+        if (isMobilePrint) {
+
+          const restoreAfterReturn = () => {
+
+            if (
+              document.visibilityState ===
+              "visible"
+            ) {
+
+              setTimeout(() => {
+
+                restorePrintMode();
+
+              }, 1500);
+
+              document.removeEventListener(
+                "visibilitychange",
+                restoreAfterReturn
+              );
+            }
+          };
+
+          document.addEventListener(
+            "visibilitychange",
+            restoreAfterReturn
+          );
+
+          setTimeout(() => {
+
+            document.addEventListener(
+              "click",
+              restorePrintMode,
+              { once: true }
+            );
+
+          }, 10000);
+        }
+
+      }, isMobilePrint ? 1500 : 150);
     }
   );
 }
