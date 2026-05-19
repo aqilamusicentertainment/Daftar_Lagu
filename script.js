@@ -2,7 +2,7 @@ const APP_VERSION =
   "1.1.1";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyOdutxwwRKU4rHKg58l2GLZ0yBRadCQ7EWCImcafIFU731efq3flrs5JZs8Km2WN4y/exec";
+  "https://script.google.com/macros/s/AKfycbxONZg5TIiNgxO1vaZBnd4fSsWTQ67dagu3HP26eiEDVf0gvb2qwjmscot0mPxc909Z/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -15,6 +15,7 @@ let requestLoaded = false;
 let selectAnimating = false;
 
 let currentRole = "";
+let lastRenderedRole = "";
 
 let requestSortMode = "newest";
 let currentRequestKeyword = "";
@@ -46,6 +47,51 @@ const SESSION_TIMEOUT =
   60 * 60 * 1000;
 
 let sessionTimer = null;
+
+function normalizeRole(role) {
+
+  return String(role || "")
+    .trim()
+    .toLowerCase();
+}
+
+function getActiveRole() {
+
+  const role =
+    normalizeRole(
+      currentRole ||
+      localStorage.getItem("aqila_role")
+    );
+
+  if (
+    role === "player" ||
+    role === "vocal" ||
+    role === "lainnya"
+  ) {
+
+    return role;
+  }
+
+  if (
+    document.body.classList.contains(
+      "player-mode"
+    )
+  ) {
+
+    return "player";
+  }
+
+  if (
+    document.body.classList.contains(
+      "vocal-mode"
+    )
+  ) {
+
+    return "vocal";
+  }
+
+  return "lainnya";
+}
 
 const notifTrack =
   document.getElementById(
@@ -726,7 +772,37 @@ async function loadNotification() {
 
 function showApp(role) {
 
+  role =
+    normalizeRole(role);
+
+  if (
+    role !== "player" &&
+    role !== "vocal" &&
+    role !== "lainnya"
+  ) {
+
+    role =
+      normalizeRole(
+        localStorage.getItem("aqila_role")
+      );
+  }
+
+  if (
+    role !== "player" &&
+    role !== "vocal" &&
+    role !== "lainnya"
+  ) {
+
+    alert("Role tidak valid, silakan login ulang");
+    return;
+  }
+
   currentRole = role;
+
+  localStorage.setItem(
+    "aqila_role",
+    role
+  );
 
   const accountRoleText =
     document.getElementById(
@@ -875,8 +951,16 @@ try {
     const oldData =
       JSON.stringify(allSongData);
 
-    if (newData !== oldData) {
+    const activeRole =
+      getActiveRole();
+
+    if (
+      newData !== oldData ||
+      lastRenderedRole !== activeRole
+    ) {
+
       allSongData = data;
+
       applySongFilter();
     }
 
@@ -901,6 +985,22 @@ songLoaded = true;
 }
 
 function renderTable(data, role) {
+
+  role =
+    normalizeRole(role);
+
+  if (
+    role !== "player" &&
+    role !== "vocal" &&
+    role !== "lainnya"
+  ) {
+
+    role =
+      getActiveRole();
+  }
+
+  lastRenderedRole =
+    role;
 
   const scrollPositions = {};
 
@@ -1252,7 +1352,7 @@ function applySongFilter() {
 
   renderTable(
     filtered,
-    currentRole
+    getActiveRole()
   );
 }
 
