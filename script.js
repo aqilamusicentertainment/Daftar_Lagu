@@ -392,6 +392,32 @@ if (requestSearch) {
   );
 }
 
+const requestSearchIcon =
+  document.querySelector(
+    ".request-search i"
+  );
+
+if (requestSearchIcon) {
+
+  requestSearchIcon.addEventListener(
+    "click",
+    () => {
+
+      requestSearch.value = "";
+
+      currentRequestKeyword = "";
+
+      currentRequestPage = 1;
+
+      renderRequestTable(
+        allRequestData
+      );
+
+      requestSearch.focus();
+    }
+  );
+}
+
 let isSendingRequest = false;
 
 loginForm.addEventListener(
@@ -891,9 +917,33 @@ function renderTable(data, role) {
     ];
   }
 
+  const sortedCategories =
+
+    currentSongKeyword
+
+      ? [...categories].sort((a, b) => {
+
+          const totalA =
+            data.filter(item =>
+              item["Kategori"] === a
+            ).length;
+
+          const totalB =
+            data.filter(item =>
+              item["Kategori"] === b
+            ).length;
+
+          return totalB - totalA;
+        })
+
+      : categories;
+
   const visibleCategories =
+
     currentSongCategory === "all"
-      ? categories
+
+      ? sortedCategories
+
       : [currentSongCategory];
 
   visibleCategories.forEach(category => {
@@ -1075,6 +1125,28 @@ if (songSearch) {
       applySongFilter();
 
       scrollToTop();
+    }
+  );
+}
+
+const songSearchIcon =
+  document.querySelector(
+    ".search-box i"
+  );
+
+if (songSearchIcon) {
+
+  songSearchIcon.addEventListener(
+    "click",
+    () => {
+
+      songSearch.value = "";
+
+      currentSongKeyword = "";
+
+      applySongFilter();
+
+      songSearch.focus();
     }
   );
 }
