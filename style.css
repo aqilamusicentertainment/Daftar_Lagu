@@ -2872,22 +2872,20 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
 
 @media print {
 
-  * {
-    -webkit-print-color-adjust:
-      exact !important;
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
 
-    print-color-adjust:
-      exact !important;
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body,
   body.dark {
-
-    background:
-      #fff !important;
-
-    color:
-      #000 !important;
+    background: #fff !important;
+    color: #000 !important;
   }
 
   body::before,
@@ -2897,205 +2895,76 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
   .request-form-card,
   #requestSection,
   #accountSection,
-  #notifModal {
-
-    display:
-      none !important;
-  }
-
-  .app {
-
-    padding:
-      0 !important;
-  }
-
-  .main-content {
-
-    max-width:
-      100% !important;
-
-    padding:
-      0 !important;
-  }
-
-  #dashboardSection {
-
-    display:
-      block !important;
-  }
-
-  .table-card,
-  body.dark .table-card {
-
-    background:
-      #fff !important;
-
-    box-shadow:
-      none !important;
-
-    border:
-      none !important;
-
-    padding:
-      0 !important;
-
-    margin-bottom:
-      4px !important;
-  }
-
-  #songTables .table-card::before {
-
-    display:
-      none !important;
-  }
-
-  .table-responsive {
-
-    overflow:
-      visible !important;
-  }
-
-  table,
-  body.dark table {
-
-    width:
-      100% !important;
-
-    min-width:
-      0 !important;
-
-    border-collapse:
-      collapse !important;
-
-    background:
-      #fff !important;
-  }
-
-  th,
-  td {
-
-    color:
-      #000 !important;
-
-    border:
-      1px solid #000 !important;
-
-    font-size:
-      11px !important;
-
-    padding:
-      6px !important;
-
-    white-space:
-      normal !important;
-  }
-
-  td,
-  body.dark td {
-
-    background:
-      #fff !important;
-
-    color:
-      #000 !important;
-  }
-
-  thead,
-  body.dark thead {
-
-    background:
-      #e5e7eb !important;
-  }
-
-  thead th,
-  body.dark thead th {
-
-    background:
-      #e5e7eb !important;
-
-    color:
-      #000 !important;
-
-    border:
-      1px solid #000 !important;
-  }
-
-  thead tr {
-
-    border-bottom:
-      1px solid #000 !important;
-  }
-
-  thead th:first-child,
-  thead th:last-child {
-
-    border-radius:
-      0 !important;
-  }
-
-  .category-label {
-
-    color:
-      #000 !important;
-
-    font-size:
-      14px !important;
-
-    margin:
-      0 !important;
-  }
-
-  .category-dot {
-
-    display:
-      none !important;
-  }
-
-  .table-card {
-    margin-top:
-      0 !important;
-  }
-
-  #dashboardSection {
-
-    margin-top:
-      20px !important;
-  }
-
-  body.player-mode #dashboardSection th:nth-child(6) {
-    text-align: center !important;
-    vertical-align: middle !important;
-  }
-
-  body.player-mode #dashboardSection td:nth-child(6) {
-    text-align: justify !important;
-  }
-
-  body.player-mode #dashboardSection td:nth-child(6).note-empty {
-    text-align: center !important;
-  }
-
+  #notifModal,
   .pagination,
   #requestPagination {
     display: none !important;
   }
 
-  @page {
-    size: A4 landscape;
-    margin: 8mm;
+  .app {
+    padding: 0 !important;
+  }
+
+  .main-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  #dashboardSection {
+    display: block !important;
+    margin-top: 20px !important;
+  }
+
+  .table-card,
+  body.dark .table-card {
+    background: #fff !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-bottom: 4px !important;
+  }
+
+  #songTables .table-card::before {
+    display: none !important;
+  }
+
+  .table-responsive {
+    overflow: visible !important;
   }
 
   body.player-mode #dashboardSection table {
     width: 100% !important;
     min-width: 0 !important;
     table-layout: fixed !important;
+    border-collapse: collapse !important;
+    background: #fff !important;
   }
 
   body.player-mode #dashboardSection th,
   body.player-mode #dashboardSection td {
-    font-size: 9.5px !important;
-    padding: 5px !important;
-    line-height: 1.35 !important;
+    color: #000 !important;
+    background: #fff !important;
+    border: 1px solid #000 !important;
+    font-size: 8.5px !important;
+    padding: 3px 4px !important;
+    line-height: 1.25 !important;
+    vertical-align: middle !important;
+  }
+
+  body.player-mode #dashboardSection th {
+    background: #e5e7eb !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    font-weight: 800 !important;
+  }
+
+  body.player-mode #dashboardSection td {
+    text-align: center !important;
+  }
+
+  body.player-mode #dashboardSection th:first-child,
+  body.player-mode #dashboardSection th:last-child {
+    border-radius: 0 !important;
   }
 
   body.player-mode #dashboardSection th:nth-child(1),
@@ -3103,6 +2972,10 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
     width: 26% !important;
     min-width: 0 !important;
     white-space: nowrap !important;
+  }
+
+  body.player-mode #dashboardSection td:nth-child(1) {
+    text-align: left !important;
   }
 
   body.player-mode #dashboardSection th:nth-child(2),
@@ -3137,8 +3010,16 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
   body.player-mode #dashboardSection td:nth-child(6) {
     width: 32% !important;
     min-width: 0 !important;
-    white-space: normal !important;
+  }
+
+  body.player-mode #dashboardSection th:nth-child(6) {
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  body.player-mode #dashboardSection td:nth-child(6) {
     text-align: justify !important;
+    white-space: normal !important;
     overflow-wrap: anywhere !important;
     word-break: break-word !important;
   }
@@ -3148,30 +3029,13 @@ body.player-mode #dashboardSection td:nth-child(6).note-empty {
     white-space: nowrap !important;
   }
 
-  body.player-mode #dashboardSection table {
-    width: 100% !important;
-    table-layout: fixed !important;
+  .category-label {
+    color: #000 !important;
+    font-size: 14px !important;
+    margin: 0 !important;
   }
 
-  body.player-mode #dashboardSection tr {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  body.player-mode #dashboardSection th,
-  body.player-mode #dashboardSection td {
-    font-size: 8.5px !important;
-    padding: 3px 4px !important;
-    line-height: 1.25 !important;
-  }
-
-  body.player-mode #dashboardSection td:nth-child(1) {
-    white-space: nowrap !important;
-  }
-
-  body.player-mode #dashboardSection td:nth-child(6) {
-    white-space: normal !important;
+  .category-dot {
+    display: none !important;
   }
 }
-
-
