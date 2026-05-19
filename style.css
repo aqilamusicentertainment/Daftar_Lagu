@@ -2663,27 +2663,60 @@ body.dark .google-search-box {
 }
 
 .youtube-search-box i {
-  color: #ff0000;
+
+  color:
+    var(--primary);
 }
 
 .youtube-search-btn {
+
   background:
-    rgba(255,0,0,.12);
+    rgba(
+      255,
+      122,
+      0,
+      .12
+    );
 
   border:
-    1px solid rgba(255,0,0,.22);
+    1px solid
+    rgba(
+      255,
+      122,
+      0,
+      .22
+    );
 }
 
 .youtube-search-btn i {
-  color: #ff3b3b;
+
+  color:
+    var(--primary);
 }
 
 .youtube-search-btn:hover {
+
   background:
-    rgba(255,0,0,.18);
+    rgba(
+      255,
+      122,
+      0,
+      .18
+    );
 
   border-color:
-    rgba(255,0,0,.32);
+    rgba(
+      255,
+      122,
+      0,
+      .32
+    );
+}
+
+.google-search-box i,
+.youtube-search-box i {
+
+  cursor: pointer;
 }
 
 @media print {

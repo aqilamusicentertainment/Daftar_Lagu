@@ -1669,6 +1669,34 @@ const googleSearchInput =
     "googleSearchInput"
   );
 
+const googleIcon =
+
+  document.querySelector(
+
+    ".google-search-box i"
+
+  );
+
+if (googleIcon) {
+
+  googleIcon.addEventListener(
+
+    "click",
+
+    () => {
+
+      googleSearchInput.value = "";
+
+      resetGooglePlaceholder();
+
+      googleSearchInput.focus();
+
+    }
+
+  );
+
+}
+
 const openSpreadsheetBtn =
   document.getElementById(
     "openSpreadsheetBtn"
@@ -1688,6 +1716,34 @@ const youtubeSearchInput =
   document.getElementById(
     "youtubeSearchInput"
   );
+
+const youtubeIcon =
+
+  document.querySelector(
+
+    ".youtube-search-box i"
+
+  );
+
+if (youtubeIcon) {
+
+  youtubeIcon.addEventListener(
+
+    "click",
+
+    () => {
+
+      youtubeSearchInput.value = "";
+
+      resetYoutubePlaceholder();
+
+      youtubeSearchInput.focus();
+
+    }
+
+  );
+
+}
 
 if (youtubeSearchForm) {
 
