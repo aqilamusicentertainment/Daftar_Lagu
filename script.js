@@ -148,6 +148,72 @@ const requestSearch =
     "requestSearch"
   );
 
+const SEARCH_ALLOWED_REGEX =
+  /[^A-Za-z0-9\s\-()+±#\/.,'&]/g;
+
+const WEB_SEARCH_ALLOWED_REGEX =
+  /[^A-Za-z0-9\s\-()+±#\/.,'&!?@]/g;
+
+
+function limitSearchInput(
+  input,
+  maxLength,
+  regex = SEARCH_ALLOWED_REGEX
+) {
+
+  if (!input) return;
+
+  input.setAttribute(
+    "maxlength",
+    maxLength
+  );
+
+  input.addEventListener(
+    "input",
+    () => {
+
+      const oldValue =
+        input.value;
+
+      const newValue =
+        oldValue
+          .replace(
+            regex,
+            ""
+          )
+          .replace(
+            /^\s+/,
+            ""
+          )
+          .replace(
+            /\s{2,}/g,
+            " "
+          )
+          .slice(
+            0,
+            maxLength
+          );
+
+      if (oldValue !== newValue) {
+
+        input.value =
+          newValue;
+      }
+    },
+    true
+  );
+}
+
+limitSearchInput(
+  songSearch,
+  40
+);
+
+limitSearchInput(
+  requestSearch,
+  40
+);
+
 const songCategoryFilter =
   document.getElementById(
     "songCategoryFilter"
@@ -215,8 +281,8 @@ if (songCategoryFilter) {
         currentSongCategory =
           option.dataset.value;
 
-        songCategoryText.innerText =
-          option.innerText;
+        songCategoryText.textContent =
+          option.textContent.trim();
 
         songCategoryFilter.classList.remove(
           "active"
@@ -297,11 +363,19 @@ function getSongItemsPerPage() {
     return 8;
   }
 
-  if (h <= 950) {
+  if (h <= 900) {
     return 10;
   }
 
-  return 12;
+  if (h <= 1050) {
+    return 12;
+  }
+
+  if (h <= 1350) {
+    return 15;
+  }
+
+  return 20;
 }
 
 
@@ -311,18 +385,30 @@ function getRequestItemsPerPage() {
     window.innerHeight;
 
   if (h <= 700) {
-    return 5;
+    return 3;
   }
 
   if (h <= 800) {
-    return 7;
+    return 5;
   }
 
   if (h <= 900) {
+    return 7;
+  }
+
+  if (h <= 1050) {
     return 8;
   }
 
-  return 10;
+  if (h <= 1250) {
+    return 10;
+  }
+
+  if (h <= 1450) {
+    return 12;
+  }
+
+  return 15;
 }
 
 function updateNotifSlider() {
@@ -2162,10 +2248,11 @@ function renderRequestPagination(totalItems) {
     renderRequestTable(allRequestData);
 
     scrollToTop(
-  document.getElementById(
-    "requestSection"
-  )
-);
+      document.getElementById(
+        "requestSection"
+      ),
+      -40
+    );
   };
 
   pagination.appendChild(prevBtn);
@@ -2220,7 +2307,8 @@ if (totalPages > 1) {
     scrollToTop(
       document.getElementById(
         "requestSection"
-      )
+      ),
+      -40
     );
   };
 
@@ -2247,10 +2335,11 @@ if (totalPages > 1) {
       renderRequestTable(allRequestData);
 
       scrollToTop(
-  document.getElementById(
-    "requestSection"
-  )
-);
+        document.getElementById(
+          "requestSection"
+        ),
+        -40
+      );
     };
 
     pagination.appendChild(btn);
@@ -2271,16 +2360,17 @@ if (totalPages > 1) {
 }
 
 function scrollToTop(
-  target = null
+  target = null,
+  offset = 0
 ) {
 
   if (target) {
 
-const y =
-  target.getBoundingClientRect()
-    .top +
-  window.pageYOffset +
-  35;
+    const y =
+      target.getBoundingClientRect()
+        .top +
+      window.pageYOffset +
+      offset;
 
     window.scrollTo({
       top: y,
@@ -2363,6 +2453,12 @@ const googleSearchInput =
     "googleSearchInput"
   );
 
+limitSearchInput(
+  googleSearchInput,
+  60,
+  WEB_SEARCH_ALLOWED_REGEX
+);
+
 const googleIcon =
 
   document.querySelector(
@@ -2421,6 +2517,12 @@ const youtubeSearchInput =
   document.getElementById(
     "youtubeSearchInput"
   );
+
+limitSearchInput(
+  youtubeSearchInput,
+  60,
+  WEB_SEARCH_ALLOWED_REGEX
+);
 
 const youtubeIcon =
 
@@ -4232,6 +4334,68 @@ function getPrintFileName() {
   return `AQiLa Music - Daftar Lagu - ${date} ${time}`;
 }
 
+function setSongSearchForPrint(value = "") {
+
+  currentSongKeyword =
+    String(value || "")
+      .toLowerCase()
+      .trim();
+
+  if (songSearch) {
+
+    songSearch.value =
+      value || "";
+  }
+
+  currentSongPage = {};
+}
+
+function setSongCategoryForPrint(value = "all") {
+
+  currentSongCategory =
+    value || "all";
+
+  currentSongPage = {};
+
+  if (!songCategoryFilter) return;
+
+  const options =
+    songCategoryFilter.querySelectorAll(
+      ".filter-option"
+    );
+
+  let selectedText =
+    "Semua";
+
+  options.forEach(option => {
+
+    const isActive =
+      option.dataset.value ===
+      currentSongCategory;
+
+    option.classList.toggle(
+      "active",
+      isActive
+    );
+
+    if (isActive) {
+
+      selectedText =
+        option.textContent.trim();
+    }
+  });
+
+  if (songCategoryText) {
+
+    songCategoryText.textContent =
+      selectedText;
+  }
+
+  songCategoryFilter.classList.remove(
+    "active"
+  );
+}
+
 const printSongBtn =
   document.getElementById(
     "printSongBtn"
@@ -4258,6 +4422,15 @@ if (printSongBtn) {
       const savedSongPage =
         { ...currentSongPage };
 
+      const savedSongKeyword =
+        currentSongKeyword;
+
+      const savedSongSearchValue =
+        songSearch ? songSearch.value : "";
+
+      const savedSongCategory =
+        currentSongCategory;
+
       const savedScrollY =
         window.scrollY;
 
@@ -4276,7 +4449,8 @@ if (printSongBtn) {
         "print-mode"
       );
 
-      currentSongPage = {};
+      setSongSearchForPrint("");
+      setSongCategoryForPrint("all");
 
       applySongFilter();
 
@@ -4286,6 +4460,20 @@ if (printSongBtn) {
 
         document.body.classList.remove(
           "print-mode"
+        );
+
+        currentSongPage =
+          savedSongPage;
+
+        setSongSearchForPrint(
+          savedSongSearchValue
+        );
+
+        currentSongKeyword =
+          savedSongKeyword;
+
+        setSongCategoryForPrint(
+          savedSongCategory
         );
 
         currentSongPage =

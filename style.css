@@ -1184,7 +1184,7 @@ body.dark .bottom-nav {
 
   box-shadow: none;
 
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .pagination button:hover {
@@ -3515,4 +3515,70 @@ body.lainnya-mode #dashboardSection td:nth-child(2).note-empty {
 
 .song-link-btn:active {
   transform: scale(.96);
+}
+
+#songCategoryFilter .filter-selected {
+  display: flex;
+  align-items: center !important;
+}
+
+#songCategoryText {
+  display: inline-block !important;
+  line-height: normal !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  white-space: nowrap !important;
+}
+
+#songCategoryFilter .filter-selected i {
+  display: flex;
+  align-items: center;
+}
+
+body.dark #dashboardSection tbody tr:nth-child(even) td,
+body.dark #requestSection tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+body.dark #dashboardSection tbody tr:hover td,
+body.dark #requestSection tbody tr:hover td {
+  background: rgba(255, 122, 0, 0.08);
+}
+
+body:not(.dark) #dashboardSection tbody tr:nth-child(even) td,
+body:not(.dark) #requestSection tbody tr:nth-child(even) td {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+body:not(.dark) #dashboardSection tbody tr:hover td,
+body:not(.dark) #requestSection tbody tr:hover td {
+  background: rgba(255, 122, 0, 0.08);
+}
+
+body.dark #dashboardSection thead,
+body.dark #requestSection thead {
+  background: #2b2118;
+}
+
+body.dark #dashboardSection thead th,
+body.dark #requestSection thead th {
+  background: #2b2118;
+}
+
+body:not(.dark) #dashboardSection thead,
+body:not(.dark) #requestSection thead {
+  background: #fff3e6;
+}
+
+body:not(.dark) #dashboardSection thead th,
+body:not(.dark) #requestSection thead th {
+  background: #fff3e6;
+}
+
+body.dark #dashboardSection thead,
+body.dark #requestSection thead,
+body.dark #dashboardSection thead th,
+body.dark #requestSection thead th {
+  background: #3a2614;
 }
