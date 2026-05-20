@@ -5048,6 +5048,13 @@ function showWelcomeSongCard() {
   );
 
   setTimeout(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }, 100);
+
+  setTimeout(() => {
 
     welcomeCard.classList.add(
       "hide-out"
