@@ -3582,3 +3582,187 @@ body.dark #dashboardSection thead th,
 body.dark #requestSection thead th {
   background: #3a2614;
 }
+
+.app-popup-modal {
+  position: fixed;
+  inset: 0;
+
+  z-index: 12000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 22px;
+}
+
+.app-popup-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0, 0, 0, .55);
+
+  backdrop-filter: blur(4px);
+}
+
+.app-popup-box {
+  position: relative;
+
+  width: 100%;
+  max-width: 360px;
+
+  background: var(--card);
+  color: var(--text);
+
+  border: 1px solid var(--border);
+
+  border-radius: 28px;
+
+  padding: 28px 22px 22px;
+
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, .35);
+
+  text-align: center;
+
+  animation: notifPop .25s ease;
+}
+
+.app-popup-icon {
+  width: 64px;
+  height: 64px;
+
+  margin: 0 auto 14px;
+
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ff7a00,
+      #ffb347
+    );
+
+  color: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 32px;
+}
+
+.app-popup-modal.success .app-popup-icon {
+  background:
+    linear-gradient(
+      135deg,
+      #22c55e,
+      #86efac
+    );
+}
+
+.app-popup-modal.error .app-popup-icon {
+  background:
+    linear-gradient(
+      135deg,
+      #ef4444,
+      #fca5a5
+    );
+}
+
+.app-popup-modal.warning .app-popup-icon {
+  background:
+    linear-gradient(
+      135deg,
+      #ff7a00,
+      #ffb347
+    );
+}
+
+.app-popup-modal.question .app-popup-icon {
+  background:
+    linear-gradient(
+      135deg,
+      #ff7a00,
+      #ffb347
+    );
+}
+
+.app-popup-box h3 {
+  font-size: 22px;
+  font-weight: 900;
+
+  margin-bottom: 8px;
+}
+
+.app-popup-box p {
+  color: var(--soft);
+
+  font-size: 15px;
+  font-weight: 700;
+
+  line-height: 1.5;
+
+  margin-bottom: 20px;
+}
+
+.app-popup-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+
+  gap: 10px;
+}
+
+.app-popup-actions.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+.app-popup-btn {
+  height: 52px;
+
+  border: none;
+  border-radius: 18px;
+
+  font-family: 'Nunito', sans-serif;
+
+  font-size: 15px;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  transition:
+    transform .2s ease,
+    opacity .2s ease;
+}
+
+.app-popup-btn.confirm {
+  background:
+    linear-gradient(
+      135deg,
+      #ff7a00,
+      #ffb347
+    );
+
+  color: #fff;
+}
+
+.app-popup-btn.cancel {
+  background:
+    rgba(255, 255, 255, .06);
+
+  color: var(--soft);
+
+  border: 1px solid var(--border);
+}
+
+body:not(.dark) .app-popup-btn.cancel {
+  background: #fff;
+}
+
+.app-popup-btn:active {
+  transform: scale(.96);
+}
+
+.app-popup-btn:hover {
+  opacity: .92;
+}

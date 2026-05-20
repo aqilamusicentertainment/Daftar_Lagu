@@ -93,6 +93,176 @@ function getActiveRole() {
   return "lainnya";
 }
 
+function appPopup({
+  title = "Informasi",
+  message = "",
+  type = "info",
+  confirmText = "OK",
+  cancelText = "Batal",
+  showCancel = false
+}) {
+
+  return new Promise(resolve => {
+
+    const oldPopup =
+      document.getElementById(
+        "appPopupModal"
+      );
+
+    if (oldPopup) {
+      oldPopup.remove();
+    }
+
+    const iconMap = {
+      success: "ri-checkbox-circle-fill",
+      error: "ri-close-circle-fill",
+      warning: "ri-error-warning-fill",
+      info: "ri-information-fill",
+      question: "ri-question-fill"
+    };
+
+    const modal =
+      document.createElement("div");
+
+    modal.id =
+      "appPopupModal";
+
+    modal.className =
+      `app-popup-modal ${type}`;
+
+    modal.innerHTML = `
+      <div class="app-popup-overlay"></div>
+
+      <div class="app-popup-box">
+
+        <div class="app-popup-icon">
+          <i class="${iconMap[type] || iconMap.info}"></i>
+        </div>
+
+        <h3>
+          ${title}
+        </h3>
+
+        <p>
+          ${message}
+        </p>
+
+        <div class="app-popup-actions ${showCancel ? "two" : ""}">
+
+          ${
+            showCancel
+              ? `
+                <button
+                  type="button"
+                  class="app-popup-btn cancel"
+                  id="appPopupCancel"
+                >
+                  ${cancelText}
+                </button>
+              `
+              : ""
+          }
+
+          <button
+            type="button"
+            class="app-popup-btn confirm"
+            id="appPopupConfirm"
+          >
+            ${confirmText}
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(
+      modal
+    );
+
+    document.body.classList.add(
+      "modal-open"
+    );
+
+    document.documentElement.classList.add(
+      "modal-open"
+    );
+
+    const closePopup = (result) => {
+
+      modal.remove();
+
+      document.body.classList.remove(
+        "modal-open"
+      );
+
+      document.documentElement.classList.remove(
+        "modal-open"
+      );
+
+      resolve(result);
+    };
+
+    document
+      .getElementById("appPopupConfirm")
+      .addEventListener(
+        "click",
+        () => closePopup(true)
+      );
+
+    const cancelBtn =
+      document.getElementById(
+        "appPopupCancel"
+      );
+
+    if (cancelBtn) {
+
+      cancelBtn.addEventListener(
+        "click",
+        () => closePopup(false)
+      );
+    }
+  });
+}
+
+function appAlert(
+  message,
+  type = "info",
+  title = ""
+) {
+
+  const titleMap = {
+    success: "Berhasil",
+    error: "Gagal",
+    warning: "Peringatan",
+    info: "Informasi"
+  };
+
+  return appPopup({
+    title: title || titleMap[type] || "Informasi",
+    message,
+    type,
+    confirmText: "OK"
+  });
+}
+
+function appConfirm(
+  message,
+  title = "Konfirmasi",
+  confirmText = "Ya",
+  cancelText = "Batal"
+) {
+
+  return appPopup({
+    title,
+    message,
+    type: "question",
+    confirmText,
+    cancelText,
+    showCancel: true
+  });
+}
+
 const notifTrack =
   document.getElementById(
     "notifTrack"
@@ -596,7 +766,10 @@ loginForm.addEventListener(
         .trim();
 
     if (!userName) {
-      alert("Nama tidak boleh kosong");
+      await appAlert(
+        "Nama tidak boleh kosong",
+        "warning"
+      );
       return;
     }
 
@@ -604,8 +777,9 @@ loginForm.addEventListener(
       userName.length < 3
     ) {
 
-      alert(
-        "Nama minimal 3 huruf"
+      await appAlert(
+        "Nama minimal 3 huruf",
+        "warning"
       );
 
       return;
@@ -613,7 +787,10 @@ loginForm.addEventListener(
 
     if (!role || !password) {
 
-      alert("Lengkapi data login");
+      await appAlert(
+        "Lengkapi data login",
+        "warning"
+      );
 
       return;
     }
@@ -646,7 +823,10 @@ loginForm.addEventListener(
 
       if (!result.success) {
 
-        alert("Password salah");
+        await appAlert(
+          "Password salah",
+          "error"
+        );
 
         setLoginLoading(false);
 
@@ -715,8 +895,9 @@ loginForm.addEventListener(
         userName
       );
 
-      alert(
-        "Login berhasil 🔥"
+      await appAlert(
+        "Login berhasil 🔥",
+        "success"
       );
 
       setTimeout(() => {
@@ -729,7 +910,10 @@ loginForm.addEventListener(
 
       console.error(error);
 
-      alert("Gagal login");
+      await appAlert(
+        "Gagal login",
+        "error"
+      );
 
       setLoginLoading(false);
     }
@@ -877,8 +1061,10 @@ function showApp(role) {
     role !== "lainnya"
   ) {
 
-    alert("Role tidak valid, silakan login ulang");
-    return;
+    return appAlert(
+      "Role tidak valid, silakan login ulang",
+      "error"
+    );
   }
 
   currentRole = role;
@@ -2251,7 +2437,7 @@ function renderRequestPagination(totalItems) {
       document.getElementById(
         "requestSection"
       ),
-      -40
+      -38
     );
   };
 
@@ -2747,7 +2933,7 @@ if (youtubeSearchForm) {
 
   youtubeSearchForm.addEventListener(
     "submit",
-    (e) => {
+    async (e) => {
 
       e.preventDefault();
 
@@ -2756,7 +2942,10 @@ if (youtubeSearchForm) {
 
       if (!keyword) {
 
-        alert("Masukkan kata pencarian");
+        await appAlert(
+          "Masukkan kata pencarian",
+          "warning"
+        );
 
         return;
       }
@@ -2961,7 +3150,7 @@ if (googleSearchForm) {
 
   googleSearchForm.addEventListener(
     "submit",
-    (e) => {
+    async (e) => {
 
       e.preventDefault();
 
@@ -2969,7 +3158,10 @@ if (googleSearchForm) {
         googleSearchInput.value.trim();
 
       if (!keyword) {
-        alert("Masukkan kata pencarian");
+        await appAlert(
+          "Masukkan kata pencarian",
+          "warning"
+        );
         return;
       }
 
@@ -3027,8 +3219,9 @@ if (openSpreadsheetBtn) {
           !data.spreadsheetUrl
         ) {
 
-          alert(
-            "Link spreadsheet belum tersedia"
+          await appAlert(
+            "Link spreadsheet belum tersedia",
+            "warning"
           );
 
           return;
@@ -3045,8 +3238,9 @@ if (openSpreadsheetBtn) {
           error
         );
 
-        alert(
-          "Gagal membuka spreadsheet"
+        await appAlert(
+          "Gagal membuka spreadsheet",
+          "error"
         );
 
       } finally {
@@ -3066,11 +3260,14 @@ if (logoutBtn) {
 
   logoutBtn.addEventListener(
     "click",
-    () => {
+    async () => {
 
       const confirmLogout =
-        confirm(
-          "Yakin ingin keluar?"
+        await appConfirm(
+          "Yakin ingin keluar?",
+          "Keluar Akun",
+          "Keluar",
+          "Batal"
         );
 
       if (!confirmLogout) return;
@@ -3110,7 +3307,7 @@ if (logoutBtn) {
 
 window.addEventListener(
   "load",
-  () => {
+  async () => {
 
     if (
 
@@ -3195,8 +3392,9 @@ window.addEventListener(
           "aqila_last_active"
         );
 
-        alert(
-          "Sesi login telah berakhir"
+        await appAlert(
+          "Sesi login telah berakhir",
+          "warning"
         );
 
         location.reload();
@@ -3266,9 +3464,39 @@ const requestForm =
     "requestForm"
   );
 
-function isValidInput(text) {
+const TITLE_ALLOWED_REGEX =
+  /[^A-Za-z0-9\s\-()+±#\/.,'&]/g;
 
-  return /^[a-zA-Z0-9\s\-()+±#\/.,]+$/.test(text);
+const NOTE_ALLOWED_REGEX =
+  /[^A-Za-z0-9\s\-()+±#\/.,'&?!]/g;
+
+function cleanTitleText(text) {
+
+  return String(text || "")
+    .replace(TITLE_ALLOWED_REGEX, "")
+    .replace(/^\s+/, "")
+    .replace(/\s{2,}/g, " ");
+}
+
+function cleanNoteText(text) {
+
+  return String(text || "")
+    .replace(NOTE_ALLOWED_REGEX, "")
+    .replace(/^\s+/, "")
+    .replace(/\s{2,}/g, " ");
+}
+
+function isValidTitle(text) {
+
+  return (
+    cleanTitleText(text) === text &&
+    /[A-Za-z0-9]/.test(text)
+  );
+}
+
+function isValidNote(text) {
+
+  return cleanNoteText(text) === text;
 }
 
 requestForm.addEventListener(
@@ -3291,17 +3519,19 @@ requestForm.addEventListener(
 
     if (!namaLagu) {
 
-      alert(
-        "Nama lagu wajib diisi"
+      await appAlert(
+        "Nama lagu wajib diisi",
+        "warning"
       );
 
       return;
     }
 
-if (!isValidInput(namaLagu)) {
+if (!isValidTitle(namaLagu)) {
 
-  alert(
-    "Nama lagu berisi karakter yang tidak didukung"
+  await appAlert(
+    "Nama lagu berisi karakter yang tidak didukung",
+    "warning"
   );
 
   return;
@@ -3309,8 +3539,9 @@ if (!isValidInput(namaLagu)) {
 
     if (namaLagu.length > 30) {
 
-      alert(
-        "Nama lagu maksimal 30 karakter"
+      await appAlert(
+        "Nama lagu maksimal 30 karakter",
+        "warning"
       );
 
       return;
@@ -3318,11 +3549,12 @@ if (!isValidInput(namaLagu)) {
 
 if (
   catatan &&
-  !isValidInput(catatan)
+  !isValidNote(catatan)
 ) {
 
-  alert(
-    "Catatan berisi karakter yang tidak didukung"
+  await appAlert(
+    "Catatan berisi karakter yang tidak didukung",
+    "warning"
   );
 
   return;
@@ -3330,16 +3562,20 @@ if (
 
     if (catatan.length > 100) {
 
-      alert(
-        "Catatan maksimal 100 karakter"
+      await appAlert(
+        "Catatan maksimal 100 karakter",
+        "warning"
       );
 
       return;
     }
 
     const confirmRequest =
-      confirm(
-        "Kirim request lagu ini?"
+      await appConfirm(
+        "Kirim request lagu ini?",
+        "Konfirmasi Request",
+        "Kirim",
+        "Batal"
       );
 
     if (!confirmRequest) return;
@@ -3409,7 +3645,10 @@ if (
 
       if (!result.success) {
 
-        alert(result.message);
+        await appAlert(
+          result.message,
+          "warning"
+        );
 
         requestBtn.disabled = false;
 
@@ -3426,8 +3665,9 @@ if (
         Date.now()
       );
 
-      alert(
-        "Request berhasil dikirim 🔥"
+      await appAlert(
+        "Request berhasil dikirim 🔥",
+        "success"
       );
 
       isSendingRequest = false;
@@ -3448,8 +3688,9 @@ if (
 
       console.error(error);
 
-      alert(
-        "Gagal mengirim request"
+      await appAlert(
+        "Gagal mengirim request",
+        "error"
       );
 
       requestBtn.disabled = false;
@@ -3549,7 +3790,7 @@ if (themeToggleApp) {
 
 window.addEventListener(
   "load",
-  () => {
+  async () => {
 
     const savedTheme =
       localStorage.getItem(
@@ -3718,6 +3959,10 @@ namaLaguInput.addEventListener(
   "input",
   () => {
 
+    namaLaguInput.value =
+      cleanTitleText(namaLaguInput.value)
+        .slice(0, 30);
+
     namaCounter.textContent =
       `${namaLaguInput.value.length}/30`;
   }
@@ -3726,6 +3971,10 @@ namaLaguInput.addEventListener(
 catatanInput.addEventListener(
   "input",
   () => {
+
+    catatanInput.value =
+      cleanNoteText(catatanInput.value)
+        .slice(0, 100);
 
     catatanCounter.textContent =
       `${catatanInput.value.length}/100`;
@@ -3818,12 +4067,13 @@ const notifBadge =
 
 notifBtn.addEventListener(
   "click",
-  () => {
+  async () => {
 
     if (!notificationImages.length) {
 
-      alert(
-        "Notifikasi belum tersedia"
+      await appAlert(
+        "Notifikasi belum tersedia",
+        "info"
       );
 
       return;
@@ -4229,15 +4479,17 @@ function resetSessionTimer() {
   if (!role) return;
 
   sessionTimer =
-    setTimeout(() => {
+    setTimeout(async () => {
 
-      alert(
-        "Sesi berakhir, silakan login kembali"
+      await appAlert(
+        "Sesi berakhir, silakan login kembali",
+        "warning"
       );
 
       localStorage.removeItem(
         "aqila_role"
       );
+
       localStorage.removeItem(
         "aqila_last_active"
       );
@@ -4287,10 +4539,12 @@ if (versionBtn) {
 
   versionBtn.addEventListener(
     "click",
-    () => {
+    async () => {
 
-      alert(
-        `AQILA MUSIC\nVersi ${APP_VERSION}`
+      await appAlert(
+        `Versi ${APP_VERSION}`,
+        "info",
+        "AQILA MUSIC"
       );
 
     }
@@ -4307,10 +4561,12 @@ if (changePasswordBtn) {
   changePasswordBtn
     .addEventListener(
       "click",
-      () => {
+      async () => {
 
-        alert(
-          "Ubah password belum tersedia."
+        await appAlert(
+          "Fitur ubah password belum tersedia.",
+          "info",
+          "Ubah Password"
         );
 
       }
@@ -4396,6 +4652,40 @@ function setSongCategoryForPrint(value = "all") {
   );
 }
 
+function setPrintButtonLoading(
+  isLoading,
+  originalText = ""
+) {
+
+  if (!printSongBtn) return;
+
+  if (isLoading) {
+
+    printSongBtn.disabled = true;
+
+    printSongBtn.innerHTML = `
+      <span class="account-menu-icon">
+        <i class="ri-loader-4-line rotating"></i>
+      </span>
+
+      <span class="account-menu-text">
+        Memuat...
+      </span>
+
+      <i class="ri-arrow-right-s-line account-menu-arrow"></i>
+    `;
+
+    return;
+  }
+
+  printSongBtn.disabled = false;
+
+  if (originalText) {
+    printSongBtn.innerHTML =
+      originalText;
+  }
+}
+
 const printSongBtn =
   document.getElementById(
     "printSongBtn"
@@ -4405,19 +4695,28 @@ if (printSongBtn) {
 
   printSongBtn.addEventListener(
     "click",
-    () => {
+    async () => {
 
       if (
         !allSongData ||
         allSongData.length === 0
       ) {
 
-        alert(
-          "Daftar lagu belum dimuat"
+        await appAlert(
+          "Daftar lagu belum dimuat",
+          "warning"
         );
 
         return;
       }
+
+      const originalPrintBtnText =
+        printSongBtn.innerHTML;
+
+      setPrintButtonLoading(
+        true,
+        originalPrintBtnText
+      );
 
       const savedSongPage =
         { ...currentSongPage };
@@ -4454,7 +4753,13 @@ if (printSongBtn) {
 
       applySongFilter();
 
+      let printRestored = false;
+
       const restorePrintMode = () => {
+
+        if (printRestored) return;
+
+        printRestored = true;
 
         isPrintMode = false;
 
@@ -4488,6 +4793,11 @@ if (printSongBtn) {
 
         document.title =
           oldTitle;
+
+        setPrintButtonLoading(
+          false,
+          originalPrintBtnText
+        );
       };
 
       if (!isMobilePrint) {
@@ -4505,6 +4815,45 @@ if (printSongBtn) {
 
         if (isMobilePrint) {
 
+          const restoreAfterReturn = () => {
+
+            if (
+              document.visibilityState ===
+              "visible"
+            ) {
+
+              setTimeout(() => {
+
+                restorePrintMode();
+
+              }, 800);
+
+              document.removeEventListener(
+                "visibilitychange",
+                restoreAfterReturn
+              );
+            }
+          };
+
+          document.addEventListener(
+            "visibilitychange",
+            restoreAfterReturn
+          );
+
+          window.addEventListener(
+            "focus",
+            () => {
+
+              setTimeout(() => {
+
+                restorePrintMode();
+
+              }, 800);
+
+            },
+            { once: true }
+          );
+
           setTimeout(() => {
 
             document.addEventListener(
@@ -4513,7 +4862,7 @@ if (printSongBtn) {
               { once: true }
             );
 
-          }, 8000);
+          }, 10000);
         }
 
       }, isMobilePrint ? 1500 : 150);
