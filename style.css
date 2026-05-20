@@ -3766,3 +3766,32 @@ body:not(.dark) .app-popup-btn.cancel {
 .app-popup-btn:hover {
   opacity: .92;
 }
+
+.about-version-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 145, 0, .12);
+  border: 1px solid rgba(255, 145, 0, .22);
+  color: #ff9f1a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .3px;
+}
+
+.about-desc-text {
+  display: block;
+  max-width: 245px;
+  margin: 14px auto 4px;
+  color: rgba(255, 255, 255, .58);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+body:not(.dark) .about-desc-text {
+  color: rgba(20, 24, 35, .58);
+}

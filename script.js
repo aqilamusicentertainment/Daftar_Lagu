@@ -2675,6 +2675,40 @@ const openSpreadsheetBtn =
     "openSpreadsheetBtn"
   );
 
+function setSpreadsheetButtonLoading(
+  isLoading,
+  originalText = ""
+) {
+
+  if (!openSpreadsheetBtn) return;
+
+  if (isLoading) {
+
+    openSpreadsheetBtn.disabled = true;
+
+    openSpreadsheetBtn.innerHTML = `
+      <span class="account-menu-icon">
+        <i class="ri-loader-4-line rotating"></i>
+      </span>
+
+      <span class="account-menu-text">
+        Memuat...
+      </span>
+
+      <i class="ri-arrow-right-s-line account-menu-arrow"></i>
+    `;
+
+    return;
+  }
+
+  openSpreadsheetBtn.disabled = false;
+
+  if (originalText) {
+    openSpreadsheetBtn.innerHTML =
+      originalText;
+  }
+}
+
 function getGooglePlaceholders() {
 
   const role =
@@ -3182,20 +3216,10 @@ if (openSpreadsheetBtn) {
       const originalText =
         openSpreadsheetBtn.innerHTML;
 
-      openSpreadsheetBtn.disabled =
-        true;
-
-      openSpreadsheetBtn.innerHTML =
-        `
-        <i
-          class="
-          ri-loader-4-line
-          rotating
-          "
-        ></i>
-
-        Memuat...
-        `;
+      setSpreadsheetButtonLoading(
+        true,
+        originalText
+      );
 
       try {
 
@@ -3245,12 +3269,10 @@ if (openSpreadsheetBtn) {
 
       } finally {
 
-        openSpreadsheetBtn
-          .disabled = false;
-
-        openSpreadsheetBtn
-          .innerHTML =
-            originalText;
+        setSpreadsheetButtonLoading(
+          false,
+          originalText
+        );
       }
     }
   );
@@ -4542,7 +4564,15 @@ if (versionBtn) {
     async () => {
 
       await appAlert(
-        `Versi ${APP_VERSION}`,
+        `
+          <span class="about-version-pill">
+            Versi ${APP_VERSION}
+          </span>
+
+          <span class="about-desc-text">
+            Dibuat untuk memudahkan akses lagu dan request musik.
+          </span>
+        `,
         "info",
         "AQILA MUSIC"
       );
@@ -4812,6 +4842,10 @@ if (printSongBtn) {
       setTimeout(() => {
 
         window.print();
+
+        setTimeout(() => {
+          restorePrintMode();
+        }, 1500);
 
         if (isMobilePrint) {
 
