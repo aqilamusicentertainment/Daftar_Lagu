@@ -5039,7 +5039,7 @@ function showWelcomeSongCard() {
 
   if (welcomeTitle) {
     welcomeTitle.innerText =
-      `Halo, ${userName}👋`;
+      `Halo, ${userName} 👋`;
   }
 
   welcomeCard.classList.remove(
