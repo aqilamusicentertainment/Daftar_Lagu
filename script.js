@@ -48,6 +48,9 @@ const SESSION_TIMEOUT =
 
 let sessionTimer = null;
 
+let sessionListenerInit =
+  false;
+
 function normalizeRole(role) {
 
   return String(role || "")
@@ -552,27 +555,32 @@ function getSongItemsPerPage() {
   const h =
     window.innerHeight;
 
-  if (h <= 750) {
-    return 6;
+  let total;
+
+  if (h <= 600) {
+    total = 5;
+  } else if (h <= 750) {
+    total = 6;
+  } else if (h <= 850) {
+    total = 8;
+  } else if (h <= 900) {
+    total = 10;
+  } else if (h <= 1050) {
+    total = 12;
+  } else if (h <= 1350) {
+    total = 15;
+  } else {
+    total = 20;
   }
 
-  if (h <= 850) {
-    return 8;
+  if (
+    getActiveRole() === "lainnya" &&
+    window.innerWidth >= 650
+  ) {
+    total *= 2;
   }
 
-  if (h <= 900) {
-    return 10;
-  }
-
-  if (h <= 1050) {
-    return 12;
-  }
-
-  if (h <= 1350) {
-    return 15;
-  }
-
-  return 20;
+  return total;
 }
 
 
@@ -886,7 +894,7 @@ loginForm.addEventListener(
                 {
                   player: "Player",
                   vocal: "Vocal",
-                  lainnya: "Guest"
+                  lainnya: "Umum"
                 }[role]
 
             })
@@ -1070,6 +1078,36 @@ async function loadNotification() {
   }
 }
 
+function applyRoleVisibility(role) {
+
+  const isGeneral =
+    role === "lainnya";
+
+  const requestListCard =
+    document.getElementById(
+      "requestListCard"
+    );
+
+  if (requestListCard) {
+    requestListCard.classList.remove(
+      "hidden"
+    );
+  }
+
+  if (openSpreadsheetBtn) {
+    openSpreadsheetBtn.classList.remove(
+      "hidden"
+    );
+  }
+
+  if (changePasswordBtn) {
+    changePasswordBtn.classList.toggle(
+      "hidden",
+      isGeneral
+    );
+  }
+}
+
 function showApp(role, showWelcome = false) {
 
   role =
@@ -1142,10 +1180,7 @@ const badgeMap = {
     "PLAYER",
 
   vocal:
-    "VOCAL",
-
-  lainnya:
-    "GUEST"
+    "VOCAL"
 };
 
 if (badgeMap[role]) {
@@ -1162,10 +1197,13 @@ if (badgeMap[role]) {
     "none";
 }
 
+  applyRoleVisibility(role);  
   loadSongData(role);
 
   loadRequestData();
+
   loadNotification();
+
   initSessionListener();
 
   if (showWelcome) {
@@ -1490,11 +1528,17 @@ function renderTable(data, role) {
       "Catatan"
     ];
 
-  } else {
+  } else if (role === "vocal") {
 
     keys = [
       "Nama Lagu",
       "Catatan"
+    ];
+
+  } else {
+
+    keys = [
+      "Nama Lagu"
     ];
   }
 
@@ -1611,6 +1655,115 @@ function renderTable(data, role) {
 
     const table =
       document.createElement("table");
+
+    const isDoubleColumn =
+      role === "lainnya" &&
+      (
+        window.innerWidth >= 650 ||
+        isPrintMode
+      );
+
+    if (isDoubleColumn) {
+
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th colspan="2">Nama Lagu</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody =
+        table.querySelector("tbody");
+
+      const half =
+        Math.ceil(
+          paginatedData.length / 2
+        );
+
+      for (
+        let i = 0;
+        i < half;
+        i++
+      ) {
+
+        const tr =
+          document.createElement("tr");
+
+        const lagu1 =
+          paginatedData[i];
+
+        const lagu2 =
+          paginatedData[
+            i + half
+          ];
+
+        [lagu1, lagu2].forEach(item => {
+
+          const td =
+            document.createElement("td");
+
+          if (item) {
+
+            const value =
+              item["Nama Lagu"] || "-";
+
+            td.textContent =
+              value;
+
+            td.classList.add(
+              "text-left",
+              "song-title-link"
+            );
+
+            td.addEventListener(
+              "click",
+              () => {
+                showSongLinkModal(
+                  value,
+                  item["Link"] ||
+                  item["LINK"] ||
+                  item["link"]
+                );
+              }
+            );
+
+          } else {
+
+            td.textContent = "";
+            td.classList.add("empty-song-cell");
+          }
+
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      }
+
+      wrapper.appendChild(table);
+      card.appendChild(wrapper);
+
+      if (!isPrintMode) {
+        const pagination =
+          document.createElement("div");
+
+        pagination.className =
+          "pagination";
+
+        card.appendChild(pagination);
+
+        renderSongPagination(
+          pagination,
+          filteredData.length,
+          category
+        );
+      }
+
+      songTables.appendChild(card);
+
+      return;
+    }
 
     const thead =
       document.createElement("thead");
@@ -1961,13 +2114,12 @@ function renderRequestTable(data) {
     currentRole === "lainnya"
       ? [
           "Waktu",
-          "Nama Lagu",
-          "Catatan"
+          "Nama Lagu"
         ]
       : [
           "Waktu",
           "Nama Lagu",
-          "Catatan",
+          "Pesan",
           "Peminta"
         ];
 
@@ -2030,17 +2182,37 @@ requestBody =
 
   requestHead.innerHTML = "";
 
-  keys.forEach(key => {
+  const isDoubleRequest =
+    currentRole === "lainnya" &&
+    window.innerWidth >= 768;
 
-    const th =
-      document.createElement("th");
+  if (isDoubleRequest) {
 
-    th.textContent = key;
+    ["Waktu", "Nama Lagu", "Waktu", "Nama Lagu"]
+    .forEach(text => {
 
-    requestHead.appendChild(th);
-  });
+      const th =
+        document.createElement("th");
 
-  requestBody.innerHTML = "";
+      th.textContent =
+        text;
+
+      requestHead.appendChild(th);
+    });
+
+  } else {
+
+    keys.forEach(key => {
+
+      const th =
+        document.createElement("th");
+
+      th.textContent =
+        key;
+
+      requestHead.appendChild(th);
+    });
+  }
 
   if (currentRequestKeyword) {
 
@@ -2137,63 +2309,86 @@ requestBody =
   const paginatedData =
     data.slice(start, end);
 
-  paginatedData.forEach(item => {
+  if (
+    currentRole === "lainnya" &&
+    window.innerWidth >= 768
+  ) {
 
-    const tr =
-      document.createElement("tr");
+    const half =
+      Math.ceil(paginatedData.length / 2);
 
-    keys.forEach(key => {
+    const left =
+      paginatedData.slice(0, half);
 
-      const td =
-        document.createElement("td");
+    const right =
+      paginatedData.slice(half);
 
-      let value =
-        item[key] || "-";
+    function makeRequestTable(list) {
 
-      if (key === "Waktu") {
+      const table =
+        document.createElement("table");
+
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>Nama Lagu</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody =
+        table.querySelector("tbody");
+
+      list.forEach(item => {
+
+        const tr =
+          document.createElement("tr");
+
+        let waktu =
+          item["Waktu"];
 
         const date =
-          new Date(value);
+          new Date(waktu);
 
         if (!isNaN(date)) {
-
-          value =
-            date.toLocaleString(
-              "id-ID",
-              {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-              }
-            );
+          waktu =
+            date.toLocaleString("id-ID", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit"
+            });
         }
-      }
 
-      td.textContent = value;
+        const tdWaktu =
+          document.createElement("td");
 
-      if (key === "Nama Lagu") {
+        tdWaktu.classList.add("date-cell");
+        tdWaktu.innerHTML =
+          String(waktu).replace(/,\s*/, ",<br>");
 
-        td.classList.add(
+        const tdLagu =
+          document.createElement("td");
+
+        tdLagu.textContent =
+          item["Nama Lagu"] || "-";
+
+        tdLagu.classList.add(
           "text-left",
           "song-title-link"
         );
 
-        td.title =
-          "Klik untuk membuka link lagu";
-
-        td.addEventListener(
+        tdLagu.addEventListener(
           "click",
           () => {
 
             const songName =
-              String(value || "").trim();
+              String(item["Nama Lagu"] || "").trim();
 
-            if (
-              !songName ||
-              songName === "-"
-            ) return;
+            if (!songName || songName === "-") return;
 
             showSongLinkModal(
               songName,
@@ -2203,34 +2398,156 @@ requestBody =
             );
           }
         );
-      }
 
-      if (key === "Catatan") {
+        tr.appendChild(tdWaktu);
+        tr.appendChild(tdLagu);
+        tbody.appendChild(tr);
+      });
 
-        td.classList.add(
-          "note-cell"
-        );
+      return table;
+    }
 
-        if (value === "-") {
+    requestTable.innerHTML = "";
+
+    const doubleWrap =
+      document.createElement("div");
+
+    doubleWrap.className =
+      "request-double";
+
+    const leftBox =
+      document.createElement("div");
+
+    const rightBox =
+      document.createElement("div");
+
+    leftBox.appendChild(
+      makeRequestTable(left)
+    );
+
+    rightBox.appendChild(
+      makeRequestTable(right)
+    );
+
+    doubleWrap.appendChild(leftBox);
+
+    if (right.length > 0) {
+      doubleWrap.appendChild(rightBox);
+    } else {
+      doubleWrap.classList.add("single-request-table");
+    }
+
+    requestTable.appendChild(doubleWrap);
+
+    renderRequestPagination(data.length);
+
+    return;
+
+  } else {
+
+    paginatedData.forEach(item => {
+
+      const tr =
+        document.createElement("tr");
+
+      keys.forEach(key => {
+
+        const td =
+          document.createElement("td");
+
+        let value =
+          item[
+            key === "Pesan"
+              ? "Catatan"
+              : key
+          ] || "-";
+
+        if (key === "Waktu") {
+
+          const date =
+            new Date(value);
+
+          if (!isNaN(date)) {
+
+            value =
+              date.toLocaleString(
+                "id-ID",
+                {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit"
+                }
+              );
+
+            td.innerHTML =
+              value.replace(/,\s*/, ",<br>");
+
+          } else {
+
+            td.textContent =
+              value;
+          }
+
+        } else {
+
+          td.textContent =
+            value;
+        }
+
+        if (key === "Pesan") {
 
           td.classList.add(
-            "note-empty"
+            "note-cell"
+          );
+
+          if (value === "-") {
+
+            td.classList.add(
+              "note-empty"
+            );
+          }
+        }
+
+        if (key === "Nama Lagu") {
+
+          td.classList.add(
+            "text-left",
+            "song-title-link"
+          );
+
+          td.addEventListener(
+            "click",
+            () => {
+
+              const songName =
+                String(value || "").trim();
+
+              if (!songName || songName === "-")
+                return;
+
+              showSongLinkModal(
+                songName,
+                item["Link"] ||
+                item["LINK"] ||
+                item["link"]
+              );
+            }
           );
         }
-      }
 
-      if (key === "Waktu") {
+        tr.appendChild(td);
 
-        td.classList.add(
-          "date-cell"
-        );
-      }
+      });
 
-      tr.appendChild(td);
+      requestBody.appendChild(
+        tr
+      );
+
     });
 
-    requestBody.appendChild(tr);
-  });
+  }
 
   renderRequestPagination(
     data.length
@@ -2313,7 +2630,7 @@ function renderSongPagination(
       card.getBoundingClientRect()
         .top +
       window.scrollY -
-      90;
+      76;
 
     window.scrollTo({
       top: y,
@@ -2509,7 +2826,7 @@ function renderRequestPagination(totalItems) {
       document.getElementById(
         "requestSection"
       ),
-      -38
+      -25
     );
   };
 
@@ -2566,7 +2883,7 @@ if (totalPages > 1) {
       document.getElementById(
         "requestSection"
       ),
-      -40
+      -25
     );
   };
 
@@ -2596,7 +2913,7 @@ if (totalPages > 1) {
         document.getElementById(
           "requestSection"
         ),
-        -40
+        -25
       );
     };
 
@@ -3364,18 +3681,16 @@ if (logoutBtn) {
           "Batal"
         );
 
-      if (!confirmLogout) return;
+      if (!confirmLogout)
+        return;
+
+      localStorage.removeItem(
+        "aqila_role"
+      );
 
       if (
-        localStorage.getItem(
-          "aqila_remember"
-        ) !== "true"
+        localStorage.getItem("aqila_remember") !== "true"
       ) {
-
-        localStorage.removeItem(
-          "aqila_role"
-        );
-
         localStorage.removeItem(
           "aqila_name"
         );
@@ -3455,7 +3770,7 @@ window.addEventListener(
             "Vocal",
 
           lainnya:
-            "Lainnya"
+            "Umum"
 
         }[savedRole];
       }
@@ -3655,7 +3970,7 @@ if (
 ) {
 
   await appAlert(
-    "Catatan berisi karakter yang tidak didukung",
+    "Pesan berisi karakter yang tidak didukung",
     "warning"
   );
 
@@ -3665,7 +3980,7 @@ if (
     if (catatan.length > 100) {
 
       await appAlert(
-        "Catatan maksimal 100 karakter",
+        "Pesan maksimal 100 karakter",
         "warning"
       );
 
@@ -3690,7 +4005,7 @@ if (
     const roleLabel = {
       player: "Player",
       vocal: "Vocal",
-      lainnya: "Guest"
+      lainnya: "Umum"
     };
 
     try {
@@ -4632,12 +4947,22 @@ function resetSessionTimer() {
         "aqila_yt_search_choice"
       );
 
+      localStorage.removeItem(
+        "aqila_tab"
+      );
+
       location.reload();
 
     }, SESSION_TIMEOUT);
 }
 
 function initSessionListener() {
+
+  if (sessionListenerInit)
+    return;
+
+  sessionListenerInit =
+    true;
 
   [
     "click",
@@ -4655,16 +4980,34 @@ function initSessionListener() {
   resetSessionTimer();
 }
 
+let resizeTimer = null;
+
 window.addEventListener(
   "resize",
   () => {
 
-    renderRequestTable(
-      allRequestData
-    );
+    clearTimeout(resizeTimer);
 
-    applySongFilter();
+    resizeTimer =
+      setTimeout(() => {
 
+        if (
+          requestLoaded &&
+          allRequestData.length > 0
+        ) {
+          renderRequestTable(
+            allRequestData
+          );
+        }
+
+        if (
+          songLoaded &&
+          allSongData.length > 0
+        ) {
+          applySongFilter();
+        }
+
+      }, 300);
   }
 );
 
@@ -5112,7 +5455,7 @@ function showWelcomeSongCard() {
         "hide-out"
       );
 
-    }, 350);
+    }, 600);
 
   }, 10000);
 }
