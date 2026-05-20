@@ -1,5 +1,5 @@
 const APP_VERSION =
-  "1.1.1";
+  "1.1.2";
 
 const SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbykwa6b6LVMiyvNN9sY8Ei73dzHVdDPGPU8x7xBiiI5K4X6yEiFyOxmr2TSnvuDCGe8/exec";
@@ -176,9 +176,22 @@ function appPopup({
       </div>
     `;
 
+    const popupScrollY =
+      window.scrollY ||
+      document.documentElement.scrollTop;
+
     document.body.appendChild(
       modal
     );
+
+    document.body.style.top =
+      `-${popupScrollY}px`;
+
+    document.body.style.position =
+      "fixed";
+
+    document.body.style.width =
+      "100%";
 
     document.body.classList.add(
       "modal-open"
@@ -198,6 +211,20 @@ function appPopup({
 
       document.documentElement.classList.remove(
         "modal-open"
+      );
+
+      document.body.style.position =
+        "";
+
+      document.body.style.top =
+        "";
+
+      document.body.style.width =
+        "";
+
+      window.scrollTo(
+        0,
+        popupScrollY
       );
 
       resolve(result);
@@ -902,7 +929,12 @@ loginForm.addEventListener(
 
       setTimeout(() => {
 
-        showApp(role);
+        localStorage.setItem(
+          "aqila_tab",
+          "dashboardSection"
+        );
+
+        showApp(role, true);
 
       }, 300);
 
@@ -1038,7 +1070,7 @@ async function loadNotification() {
   }
 }
 
-function showApp(role) {
+function showApp(role, showWelcome = false) {
 
   role =
     normalizeRole(role);
@@ -1135,6 +1167,12 @@ if (badgeMap[role]) {
   loadRequestData();
   loadNotification();
   initSessionListener();
+
+  if (showWelcome) {
+    setTimeout(() => {
+      showWelcomeSongCard();
+    }, 800);
+  }
 }
 
 async function loadSongData(role) {
@@ -3317,6 +3355,10 @@ if (logoutBtn) {
         "aqila_yt_search_choice"
       );
 
+      localStorage.removeItem(
+        "aqila_tab"
+      );
+
       localStorage.setItem(
         "aqila_logged_out",
         "true"
@@ -3688,7 +3730,10 @@ if (
       );
 
       await appAlert(
-        "Request berhasil dikirim 🔥",
+        `Request berhasil dikirim 🔥 <br>
+        <span class="popup-small-note">
+          Terima kasih sudah mengirim request. Lagu akan dipertimbangkan terlebih dahulu. Jika belum digarap, kemungkinan karena lagunya masih sulit dimainkan, belum familiar, belum sempat diproses, atau kurang populer dan jarang diminati.
+        </span>`,
         "success"
       );
 
@@ -4087,6 +4132,8 @@ const notifBadge =
     "notifBadge"
   );
 
+let notifScrollY = 0;
+
 notifBtn.addEventListener(
   "click",
   async () => {
@@ -4244,6 +4291,19 @@ notifBtn.addEventListener(
       "show"
     );
 
+    notifScrollY =
+      window.scrollY ||
+      document.documentElement.scrollTop;
+
+    document.body.style.top =
+      `-${notifScrollY}px`;
+
+    document.body.style.position =
+      "fixed";
+
+    document.body.style.width =
+      "100%";
+
     document.body.classList.add(
       "modal-open"
     );
@@ -4285,6 +4345,20 @@ notifClose.addEventListener(
 
     document.documentElement.classList.remove(
       "modal-open"
+    );
+
+    document.body.style.position =
+      "";
+
+    document.body.style.top =
+      "";
+
+    document.body.style.width =
+      "";
+
+    window.scrollTo(
+      0,
+      notifScrollY
     );
 
     notifOpened = false;
@@ -4942,4 +5016,54 @@ if (nameInput) {
 
     }
   );
+}
+
+function showWelcomeSongCard() {
+
+  const welcomeCard =
+    document.getElementById(
+      "welcomeSongCard"
+    );
+
+  const welcomeTitle =
+    document.getElementById(
+      "welcomeSongTitle"
+    );
+
+  if (!welcomeCard) return;
+
+  const userName =
+    localStorage.getItem(
+      "aqila_name"
+    ) || "Pengguna";
+
+  if (welcomeTitle) {
+    welcomeTitle.innerText =
+      `Halo, ${userName}👋`;
+  }
+
+  welcomeCard.classList.remove(
+    "hidden",
+    "hide-out"
+  );
+
+  setTimeout(() => {
+
+    welcomeCard.classList.add(
+      "hide-out"
+    );
+
+    setTimeout(() => {
+
+      welcomeCard.classList.add(
+        "hidden"
+      );
+
+      welcomeCard.classList.remove(
+        "hide-out"
+      );
+
+    }, 350);
+
+  }, 10000);
 }
