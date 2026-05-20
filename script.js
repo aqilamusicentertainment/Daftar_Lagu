@@ -1212,7 +1212,7 @@ try {
         SCRIPT_URL,
         {
           method: "POST",
-
+          cache: "no-store",
           signal:
             controller.signal,
 
@@ -1230,15 +1230,21 @@ try {
       data.length === 0
     ) {
 
-      songLoaded = true;
-
       songTables.innerHTML = `
-        <div class="empty-state">
+        <div class="loading-state">
 
-          Belum ada lagu
+          <i class="ri-loader-4-line rotating"></i>
+
+          Memuat daftar lagu...
 
         </div>
       `;
+
+      setTimeout(() => {
+
+        loadSongData(role);
+
+      }, 3000);
 
       return;
     }
@@ -1870,6 +1876,8 @@ if (!requestLoaded) {
         {
           method: "POST",
 
+          cache: "no-store",
+
           signal:
             controller.signal,
 
@@ -1882,7 +1890,10 @@ if (!requestLoaded) {
     const data =
       await response.json();
 
-  if (Array.isArray(data)) {
+  if (
+    Array.isArray(data) &&
+    data.length > 0
+  ) {
 
     const newData =
       JSON.stringify(data);
@@ -1899,6 +1910,29 @@ if (!requestLoaded) {
     }
 
     requestLoaded = true;
+
+  } else {
+
+    const requestTable =
+      document.querySelector(
+        "#requestSection .table-responsive"
+      );
+
+    requestTable.innerHTML = `
+      <div class="loading-state">
+
+        <i class="ri-loader-4-line rotating"></i>
+
+        Memuat daftar request...
+
+      </div>
+    `;
+
+    setTimeout(() => {
+
+      loadRequestData();
+
+    }, 3000);
   }
 
   } catch (error) {
@@ -3456,6 +3490,10 @@ window.addEventListener(
           "aqila_last_active"
         );
 
+        localStorage.removeItem(
+          "aqila_yt_search_choice"
+        );
+
         await appAlert(
           "Sesi login telah berakhir",
           "warning"
@@ -4588,6 +4626,10 @@ function resetSessionTimer() {
 
       localStorage.removeItem(
         "aqila_last_active"
+      );
+
+      localStorage.removeItem(
+        "aqila_yt_search_choice"
       );
 
       location.reload();
