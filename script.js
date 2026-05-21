@@ -1804,6 +1804,67 @@ function showSongLinkModal(songName, customLink) {
     );
 }
 
+function cleanEditSongValue(field, value) {
+
+  let regex =
+    /[^A-Za-z0-9\s\-()+±#\/.,'&?!]/g;
+
+  let max =
+    100;
+
+  if (field === "Nama Lagu") {
+    regex =
+      /[^A-Za-z0-9\s\-()+±#\/.,'&]/g;
+    max = 30;
+  }
+
+  if (
+    field === "Nada Pria" ||
+    field === "Nada Duet" ||
+    field === "Nada Wanita"
+  ) {
+    regex =
+      /[^A-Ga-g#bBmM\s\/\-]/g;
+    max = 12;
+  }
+
+  if (field === "Tempo") {
+    regex =
+      /[^0-9+\-±\s]/g;
+    max = 8;
+  }
+
+  if (field === "Catatan") {
+    regex =
+      /[^A-Za-z0-9\s\-()+±#\/.,'&?!]/g;
+    max = 100;
+  }
+
+  return String(value || "")
+    .replace(regex, "")
+    .replace(/^\s+/, "")
+    .replace(/\s{2,}/g, " ")
+    .slice(0, max);
+}
+
+function getEditSongMaxLength(field) {
+
+  if (field === "Nama Lagu")
+    return 30;
+
+  if (
+    field === "Nada Pria" ||
+    field === "Nada Duet" ||
+    field === "Nada Wanita"
+  )
+    return 12;
+
+  if (field === "Tempo")
+    return 8;
+
+  return 100;
+}
+
 async function showEditSongPopup(
   songName,
   field,
@@ -1829,7 +1890,13 @@ async function showEditSongPopup(
     "edit-song-modal";
 
   const safeOldValue =
-    oldValue === "-" ? "" : oldValue;
+    cleanEditSongValue(
+      field,
+      oldValue === "-" ? "" : oldValue
+    );
+
+  const maxLength =
+    getEditSongMaxLength(field);
 
   modal.innerHTML = `
     <div class="edit-song-overlay"></div>
@@ -1842,7 +1909,7 @@ async function showEditSongPopup(
 
       <textarea
         id="editSongInput"
-        maxlength="100"
+        maxlength="${maxLength}"
       >${safeOldValue}</textarea>
 
       <div class="edit-song-actions">
@@ -1875,6 +1942,18 @@ async function showEditSongPopup(
 
   input.focus();
 
+  input.addEventListener(
+    "input",
+    () => {
+
+      input.value =
+        cleanEditSongValue(
+          field,
+          input.value
+        );
+    }
+  );
+
   document
     .getElementById("editSongCancel")
     .onclick = () => modal.remove();
@@ -1887,7 +1966,10 @@ async function showEditSongPopup(
         document.getElementById("editSongSave");
 
       const newValue =
-        input.value.trim();
+        cleanEditSongValue(
+          field,
+          input.value
+        ).trim();
 
       saveBtn.disabled = true;
 
