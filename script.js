@@ -2838,6 +2838,357 @@ function formatRequestTime(value) {
   return `${match[1]}/${match[2]}/${match[3]}<br>${match[4]}:${match[5]}`;
 }
 
+let popupScrollY = 0;
+
+function lockBodyScroll() {
+
+  popupScrollY =
+    window.scrollY ||
+    document.documentElement.scrollTop;
+
+  document.body.style.top =
+    `-${popupScrollY}px`;
+
+  document.body.style.position =
+    "fixed";
+
+  document.body.style.width =
+    "100%";
+
+  document.body.style.overflow =
+    "hidden";
+
+  document.body.classList.add(
+    "modal-open"
+  );
+
+  document.documentElement.classList.add(
+    "modal-open"
+  );
+}
+
+function unlockBodyScroll() {
+
+  document.body.style.position =
+    "";
+
+  document.body.style.top =
+    "";
+
+  document.body.style.width =
+    "";
+
+  document.body.style.overflow =
+    "";
+
+  document.body.classList.remove(
+    "modal-open"
+  );
+
+  document.documentElement.classList.remove(
+    "modal-open"
+  );
+
+  window.scrollTo(
+    0,
+    popupScrollY
+  );
+}
+
+function showRequestMovePopup(item) {
+
+  const old =
+    document.getElementById("requestMoveModal");
+
+  if (old) old.remove();
+
+  const modal =
+    document.createElement("div");
+
+  modal.id = "requestMoveModal";
+  modal.className = "edit-song-modal";
+
+  const waktu =
+    item["Waktu"] || "-";
+
+  const namaLagu =
+    item["Nama Lagu"] || "";
+
+  const pesan =
+    item["Catatan"] || "-";
+
+  const peminta =
+    item["Peminta"] || "-";
+
+  modal.innerHTML = `
+    <div class="edit-song-overlay"></div>
+
+    <div class="edit-song-box">
+
+      <h3>Detail Request</h3>
+
+      <div class="request-detail-list">
+
+        <div>
+          <span>Waktu</span>
+          <strong>${waktu}</strong>
+        </div>
+
+        <div>
+          <span>Nama Lagu</span>
+          <strong>${namaLagu}</strong>
+        </div>
+
+        <div>
+          <span>Pesan</span>
+          <strong>${pesan}</strong>
+        </div>
+
+        <div>
+          <span>Peminta</span>
+          <strong>${peminta}</strong>
+        </div>
+
+      </div>
+
+      <div class="edit-song-actions">
+        <button
+          type="button"
+          class="edit-song-cancel"
+          id="requestMoveCancel"
+        >
+          Batal
+        </button>
+
+        <button
+          type="button"
+          class="edit-song-save"
+          id="requestMoveNext"
+        >
+          Pindahkan
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  lockBodyScroll();
+
+  document
+    .getElementById("requestMoveCancel")
+    .onclick = () => {
+      modal.remove();
+      unlockBodyScroll();
+    };
+
+  document
+    .getElementById("requestMoveNext")
+    .onclick = () => {
+
+      modal.remove();
+
+      showMoveToSongForm({
+        waktu,
+        namaLagu,
+        pesan,
+        peminta
+      });
+    };
+}
+
+function showMoveToSongForm(data) {
+
+  const old =
+    document.getElementById("moveToSongModal");
+
+  if (old) old.remove();
+
+  const modal =
+    document.createElement("div");
+
+  modal.id = "moveToSongModal";
+  modal.className = "edit-song-modal";
+
+  modal.innerHTML = `
+    <div class="edit-song-overlay"></div>
+
+    <div class="edit-song-box">
+
+      <h3>Pindah ke Daftar Lagu</h3>
+
+      <label>
+      Nama Lagu
+      </label>
+
+      <input
+      id="moveSongName"
+      class="move-song-input"
+      maxlength="30"
+      value="${cleanEditSongValue(
+        "Nama Lagu",
+        data.namaLagu
+      )}"
+      >
+
+      <label>
+      Nada
+      </label>
+
+      <div class="move-song-nada-grid">
+
+      <input
+      id="moveSongNadaPria"
+      class="move-song-input"
+      maxlength="12"
+      placeholder="Pria"
+      >
+
+      <input
+      id="moveSongNadaDuet"
+      class="move-song-input"
+      maxlength="12"
+      placeholder="Duet"
+      >
+
+      <input
+      id="moveSongNadaWanita"
+      class="move-song-input"
+      maxlength="12"
+      placeholder="Wanita"
+      >
+
+      </div>
+
+      <label>
+      Tempo
+      </label>
+
+      <input
+      id="moveSongTempo"
+      class="move-song-input"
+      maxlength="8"
+      placeholder="Tempo"
+      >
+
+      <label>
+      Catatan
+      </label>
+
+    <textarea
+      id="moveSongNote"
+      maxlength="100"
+      placeholder="Catatan">${cleanEditSongValue(
+        "Catatan",
+        data.pesan === "-"
+          ? ""
+          : data.pesan
+      ).trimStart()}</textarea>
+
+      <div class="edit-song-actions">
+        <button
+          type="button"
+          class="edit-song-cancel"
+          id="moveSongCancel"
+        >
+          Batal
+        </button>
+
+        <button
+          type="button"
+          class="edit-song-save"
+          id="moveSongSave"
+        >
+          Simpan
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  lockBodyScroll();
+
+  const nameInput =
+    document.getElementById("moveSongName");
+
+  const nadaPria =
+    document.getElementById(
+      "moveSongNadaPria"
+    );
+
+  const nadaDuet =
+    document.getElementById(
+      "moveSongNadaDuet"
+    );
+
+  const nadaWanita =
+    document.getElementById(
+      "moveSongNadaWanita"
+    );
+
+  const tempoInput =
+    document.getElementById("moveSongTempo");
+
+  const noteInput =
+    document.getElementById("moveSongNote");
+
+  nameInput.addEventListener("input", () => {
+    nameInput.value =
+      cleanEditSongValue("Nama Lagu", nameInput.value);
+  });
+
+  [
+    nadaPria,
+    nadaDuet,
+    nadaWanita
+  ].forEach(input => {
+
+    input.addEventListener(
+      "input",
+      () => {
+
+        input.value =
+          cleanEditSongValue(
+            "Nada Pria",
+            input.value
+          );
+      }
+    );
+  });
+
+  tempoInput.addEventListener("input", () => {
+    tempoInput.value =
+      cleanEditSongValue("Tempo", tempoInput.value);
+  });
+
+  noteInput.addEventListener("input", () => {
+    noteInput.value =
+      cleanEditSongValue("Catatan", noteInput.value);
+  });
+
+  document
+    .getElementById("moveSongCancel")
+    .onclick = () => {
+      modal.remove();
+      unlockBodyScroll();
+    };
+
+  document
+    .getElementById("moveSongSave")
+    .onclick = async () => {
+
+      await appAlert(
+        "Frontend siap. Backend code.gs untuk simpan lagu perlu ditambahkan.",
+        "info"
+      );
+
+      modal.remove();
+      unlockBodyScroll();
+    };
+}
+
 function renderRequestTable(data) {
 
   const keys =
@@ -3216,6 +3567,11 @@ requestBody =
           td.addEventListener(
             "click",
             () => {
+
+              if (getActiveRole() === "playerplus") {
+                showRequestMovePopup(item);
+                return;
+              }
 
               const songName =
                 String(value || "").trim();
