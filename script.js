@@ -1635,6 +1635,7 @@ try {
       getActiveRole();
 
     if (
+      !songLoaded ||
       newData !== oldData ||
       lastRenderedRole !== activeRole
     ) {
@@ -1807,14 +1808,14 @@ function showSongLinkModal(songName, customLink) {
 function cleanEditSongValue(field, value) {
 
   let regex =
-    /[^A-Za-z0-9\s\-()+±#\/.,'&?!]/g;
+    /[^A-Za-z0-9\s\-()+±#\/.,"&?!]/g;
 
   let max =
     100;
 
   if (field === "Nama Lagu") {
     regex =
-      /[^A-Za-z0-9\s\-()+±#\/.,'&]/g;
+      /[^A-Za-z0-9\s\-()+±#\/.,"&]/g;
     max = 30;
   }
 
@@ -1823,20 +1824,35 @@ function cleanEditSongValue(field, value) {
     field === "Nada Duet" ||
     field === "Nada Wanita"
   ) {
+
+    value =
+      String(value)
+        .replace(/\+/g,"+")
+        .replace(/\-\+/g,"±")
+        .replace(/\+\-/g,"±")
+
     regex =
-      /[^A-Ga-g#bBmM\s\/\-]/g;
+      /[^A-Ga-g#bBmM\s\/\-±+"()]/g;
+
     max = 12;
   }
 
   if (field === "Tempo") {
+
+    value =
+      String(value)
+        .replace(/\-\+/g,"±")
+        .replace(/\+\-/g,"±")
+
     regex =
-      /[^0-9+\-±\s]/g;
+      /[^0-9+\-±"\/()\s]/g;
+
     max = 8;
   }
 
   if (field === "Catatan") {
     regex =
-      /[^A-Za-z0-9\s\-()+±#\/.,'&?!]/g;
+      /[^A-Za-z0-9\s\-()+±#\/.,"&?!]/g;
     max = 100;
   }
 
@@ -1942,6 +1958,24 @@ async function showEditSongPopup(
 
   input.focus();
 
+  const saveBtn =
+    document.getElementById("editSongSave");
+
+  const cancelBtn =
+    document.getElementById("editSongCancel");
+
+  const originalValue =
+    cleanEditSongValue(
+      field,
+      safeOldValue
+    ).trim();
+
+  let confirmMode =
+    false;
+
+  saveBtn.disabled =
+    true;
+
   input.addEventListener(
     "input",
     () => {
@@ -1951,6 +1985,17 @@ async function showEditSongPopup(
           field,
           input.value
         );
+
+      const currentValue =
+        input.value.trim();
+
+      confirmMode = false;
+
+      saveBtn.innerHTML =
+        "Simpan";
+
+      saveBtn.disabled =
+        currentValue === originalValue;
     }
   );
 
@@ -1958,62 +2003,116 @@ async function showEditSongPopup(
     .getElementById("editSongCancel")
     .onclick = () => modal.remove();
 
-  document
-    .getElementById("editSongSave")
-    .onclick = async () => {
+  saveBtn.onclick = async () => {
 
-      const saveBtn =
-        document.getElementById("editSongSave");
+    const newValue =
+      cleanEditSongValue(
+        field,
+        input.value
+      ).trim();
 
-      const newValue =
-        cleanEditSongValue(
-          field,
-          input.value
-        ).trim();
+    if (
+      newValue === originalValue
+    ) return;
 
-      saveBtn.disabled = true;
+    if (!confirmMode) {
 
-      saveBtn.innerHTML = `
-        <i class="ri-loader-4-line rotating"></i>
-        Menyimpan...
-      `;
+      confirmMode = true;
 
-      const response =
-        await fetch(SCRIPT_URL, {
-          method: "POST",
-          body: JSON.stringify({
-            action: "updateSong",
-            token: sessionStorage.getItem(
-              "aqila_token"
-            ),
-            songName,
-            field,
-            value: newValue
-          })
-        });
-
-      const result =
-        await response.json();
-
-      modal.remove();
-
-      if (!result.success) {
-        await appAlert(
-          result.message ||
-            "Gagal mengubah data",
-          "error"
-        );
-        return;
-      }
-
-      await appAlert(
-        "Data lagu berhasil diubah",
-        "success"
+      saveBtn.classList.add(
+        "anim-change"
       );
 
-      songLoaded = false;
-      loadSongData(getActiveRole());
-    };
+      saveBtn.innerHTML =
+        "Yakin?";
+
+      setTimeout(
+        () =>
+          saveBtn.classList.remove(
+            "anim-change"
+          ),
+        180
+      );
+
+      return;
+    }
+
+    saveBtn.disabled = true;
+    cancelBtn.disabled = true;
+    input.disabled = true;
+
+    modal.classList.add(
+      "form-loading"
+    );
+
+    saveBtn.classList.add(
+      "anim-change"
+    );
+
+    saveBtn.innerHTML = `
+      <i class="ri-loader-4-line rotating"></i>
+      Menyimpan...
+    `;
+
+    setTimeout(
+      () =>
+        saveBtn.classList.remove(
+          "anim-change"
+        ),
+      180
+    );
+
+    const response =
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "updateSong",
+          token: sessionStorage.getItem(
+            "aqila_token"
+          ),
+          songName,
+          field,
+          value: newValue
+        })
+      });
+
+    const result =
+      await response.json();
+
+    modal.remove();
+
+    if (!result.success) {
+      await appAlert(
+        result.message ||
+          "Gagal mengubah data",
+        "error"
+      );
+      return;
+    }
+
+    await appAlert(
+      "Data lagu berhasil diubah",
+      "success"
+    );
+
+    allSongData =
+      allSongData.map(item => {
+
+        if (
+          String(item["Nama Lagu"]).trim() ===
+          String(songName).trim()
+        ) {
+          return {
+            ...item,
+            [field]: newValue || ""
+          };
+        }
+
+        return item;
+      });
+
+    applySongFilter();
+  };
 }
 
 function renderTable(data, role) {

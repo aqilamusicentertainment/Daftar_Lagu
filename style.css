@@ -4474,7 +4474,7 @@ body.playerplus-mode #dashboardSection .note-empty {
   border-radius: 18px;
   border: 1px solid var(--border);
 
-  background: #111111;
+  background: #f3f6fb;
   color: var(--text);
 
   text-align: center;
@@ -4486,7 +4486,79 @@ body.playerplus-mode #dashboardSection .note-empty {
   outline: none;
 }
 
+body.dark .pin-box {
+  background: #111111;
+  border-color: #2a2a2a;
+}
+
 .pin-box:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(255,122,0,.14);
+  box-shadow: 0 0 0 2px rgba(255, 123, 0, 0.521);
+}
+
+.edit-song-modal.form-loading #editSongInput{
+
+  pointer-events:
+    none;
+
+  user-select:
+    none;
+}
+
+.edit-song-modal.form-loading
+.edit-song-cancel{
+
+  pointer-events:
+    none;
+}
+
+.edit-song-modal.form-loading {
+
+  opacity:
+    1 !important;
+}
+
+.edit-song-save:disabled,
+.edit-song-cancel:disabled{
+
+  cursor:
+    not-allowed;
+}
+
+.edit-song-save{
+
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    background .2s ease;
+
+  overflow:
+    hidden;
+}
+
+.edit-song-save.anim-change{
+
+  transform:
+    scale(.96);
+
+  opacity:
+    .85;
+}
+
+.edit-song-save i{
+
+  animation:
+    spin 1s linear infinite;
+}
+
+@keyframes spin{
+
+  from{
+    transform:
+      rotate(0);
+  }
+
+  to{
+    transform:
+      rotate(360deg);
+  }
 }
