@@ -2,7 +2,7 @@ const APP_VERSION =
   "1.1.2";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxAdWv7YnZ31bd-w4HPfVn7rK6bCjqoG9B-a-x4bza3c-6J52IE710PRm9-wlfdyRPl/exec";
+  "https://script.google.com/macros/s/AKfycbyqZkGzhFsQcJxBKc4-uPGf24Ga_422pJyALo1IW7Tl04M4PhcvlffgdaGeU6OlTqwN/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -455,29 +455,16 @@ function showPlayerPlusPinPopup() {
 
     okBtn.disabled = true;
 
-    inputs.forEach(() => {
+    inputs.forEach(box => {
+      box.addEventListener("input", () => {
+        const pin =
+          [...inputs]
+            .map(i => i.dataset.value || "")
+            .join("");
 
-      inputs.forEach(box => {
-
-        box.addEventListener(
-          "input",
-          () => {
-
-            const pin =
-              [...inputs]
-                .map(i =>
-                  i.dataset.value || ""
-                )
-                .join("");
-
-            okBtn.disabled =
-              pin.length !== 4;
-
-          }
-        );
-
+        okBtn.disabled =
+          pin.length !== 4;
       });
-
     });
 
     okBtn.onclick = () => {
@@ -740,20 +727,21 @@ document.addEventListener(
   "click",
   () => {
 
-    requestFilter.classList.remove(
-      "active"
-    );
+    requestFilter.classList.remove("active");
 
     if (songCategoryFilter) {
-      songCategoryFilter.classList.remove(
-        "active"
-      );
+      songCategoryFilter.classList.remove("active");
     }
+
     if (customSelect) {
-      customSelect.classList.remove(
-        "active"
-      );
+      customSelect.classList.remove("active");
     }
+
+    document
+      .querySelectorAll(".move-category-wrap")
+      .forEach(el => {
+        el.classList.remove("active");
+      });
   }
 );
 
@@ -924,7 +912,7 @@ function startNotifAutoplay() {
 
       updateNotifSlider();
 
-    }, 5000);
+    }, 2000);
 }
 
 function pauseNotifAutoplay() {
@@ -1546,70 +1534,42 @@ async function loadSongData(role) {
   isLoadingSongs = true;
 
   if (!songLoaded) {
-
     songTables.innerHTML = `
       <div class="loading-state">
-
         <i class="ri-loader-4-line rotating"></i>
-
         Memuat daftar lagu...
-
       </div>
     `;
   }
-  
-let timeout;
 
-try {
+  let timeout;
 
+  try {
     const controller =
       new AbortController();
 
     timeout =
       setTimeout(() => {
-
         controller.abort();
-
       }, 10000);
 
     const response =
-      await fetch(
-        SCRIPT_URL,
-        {
-          method: "POST",
-          cache: "no-store",
-          signal:
-            controller.signal,
-
-          body: JSON.stringify({
-            action: "songs",
-            token: sessionStorage.getItem("aqila_token")
-          })
-        }
-      );
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        cache: "no-store",
+        signal: controller.signal,
+        body: JSON.stringify({
+          action: "songs",
+          token: sessionStorage.getItem("aqila_token")
+        })
+      });
 
     const data =
       await response.json();
 
-    if (
-      !Array.isArray(data) ||
-      data.length === 0
-    ) {
-
-      songTables.innerHTML = `
-        <div class="loading-state">
-
-          <i class="ri-loader-4-line rotating"></i>
-
-          Memuat daftar lagu...
-
-        </div>
-      `;
-
+    if (!Array.isArray(data)) {
       setTimeout(() => {
-
         loadSongData(role);
-
       }, 3000);
 
       return;
@@ -1639,27 +1599,20 @@ try {
       newData !== oldData ||
       lastRenderedRole !== activeRole
     ) {
-
       allSongData = data;
-
       applySongFilter();
     }
 
-songLoaded = true;
+    songLoaded = true;
 
   } catch (error) {
-
     console.error(error);
 
     setTimeout(() => {
-
       loadSongData(role);
-
     }, 3000);
 
-    return;
-    
-  }  finally {
+  } finally {
     isLoadingSongs = false;
     clearTimeout(timeout);
   }
@@ -1881,238 +1834,571 @@ function getEditSongMaxLength(field) {
   return 100;
 }
 
-async function showEditSongPopup(
-  songName,
-  field,
-  oldValue
-) {
+function getSongValue(item, key) {
+  const value = item[key];
 
-  const oldModal =
-    document.getElementById(
-      "editSongModal"
-    );
+  return value !== undefined &&
+    value !== null &&
+    String(value).trim() !== ""
+      ? String(value)
+      : "-";
+}
 
-  if (oldModal) {
-    oldModal.remove();
-  }
+function showSongDetailPopup(item) {
+  const old = document.getElementById("songDetailModal");
 
-  const modal =
-    document.createElement("div");
+  if (old) old.remove();
 
-  modal.id =
-    "editSongModal";
+  const modal = document.createElement("div");
 
-  modal.className =
-    "edit-song-modal";
+  modal.id = "songDetailModal";
+  modal.className = "edit-song-modal";
 
-  const safeOldValue =
-    cleanEditSongValue(
-      field,
-      oldValue === "-" ? "" : oldValue
-    );
-
-  const maxLength =
-    getEditSongMaxLength(field);
+  const namaLagu = getSongValue(item, "Nama Lagu");
+  const nadaPria = getSongValue(item, "Nada Pria");
+  const nadaDuet = getSongValue(item, "Nada Duet");
+  const nadaWanita = getSongValue(item, "Nada Wanita");
+  const tempo = getSongValue(item, "Tempo");
+  const catatan = getSongValue(item, "Catatan");
+  const kategori = getSongValue(item, "Kategori");
 
   modal.innerHTML = `
     <div class="edit-song-overlay"></div>
 
     <div class="edit-song-box">
+      <div class="edit-song-scroll">
 
-      <h3>Ubah ${field}</h3>
+        <h3>Detail Lagu</h3>
 
-      <p>${songName}</p>
+        <div class="request-detail-list song-detail-list">
 
-      <textarea
-        id="editSongInput"
-        maxlength="${maxLength}"
-      >${safeOldValue}</textarea>
+          <div>
+            <span>Nama Lagu</span>
+            <strong>${namaLagu}</strong>
+          </div>
 
-      <div class="edit-song-actions">
-        <button
-          type="button"
-          class="edit-song-cancel"
-          id="editSongCancel"
-        >
-          Batal
-        </button>
+          <div class="song-detail-two">
+            <div>
+              <span>Kategori</span>
+              <strong>${kategori}</strong>
+            </div>
 
-        <button
-          type="button"
-          class="edit-song-save"
-          id="editSongSave"
-        >
-          Simpan
-        </button>
+            <div>
+              <span>Tempo</span>
+              <strong>${tempo}</strong>
+            </div>
+          </div>
+
+          <div class="song-detail-three">
+            <div>
+              <span>Pria</span>
+              <strong>${nadaPria}</strong>
+            </div>
+
+            <div>
+              <span>Duet</span>
+              <strong>${nadaDuet}</strong>
+            </div>
+
+            <div>
+              <span>Wanita</span>
+              <strong>${nadaWanita}</strong>
+            </div>
+          </div>
+
+          <div>
+            <span>Catatan</span>
+            <strong>${catatan}</strong>
+          </div>
+
+        </div>
+
+        <div class="song-detail-actions">
+          <button
+            type="button"
+            class="edit-song-cancel"
+            id="songDetailCancel"
+          >
+            Batal
+          </button>
+
+          <button
+            type="button"
+            class="song-delete-btn"
+            id="songDetailDelete"
+          >
+            Hapus
+          </button>
+
+          <button
+            type="button"
+            class="edit-song-save"
+            id="songDetailEdit"
+          >
+            Edit
+          </button>
+        </div>
+
       </div>
-
     </div>
   `;
 
   document.body.appendChild(modal);
+  lockBodyScroll();
 
-  const input =
-    document.getElementById(
-      "editSongInput"
+  document.getElementById("songDetailCancel").onclick = () => {
+    modal.remove();
+    unlockBodyScroll();
+  };
+
+  document.getElementById("songDetailEdit").onclick = () => {
+    modal.remove();
+    showEditSongForm(item);
+  };
+
+  document.getElementById("songDetailDelete").onclick = async () => {
+    const confirmDelete = await appConfirm(
+      `Hapus lagu "${namaLagu}" dari daftar lagu?`,
+      "Hapus Lagu",
+      "Hapus",
+      "Batal"
     );
 
-  input.focus();
+    if (!confirmDelete) return;
+
+    await deleteSong(item, modal);
+  };
+}
+
+function showEditSongForm(item) {
+  const old = document.getElementById("editSongModal");
+
+  if (old) old.remove();
+
+  const modal = document.createElement("div");
+
+  modal.id = "editSongModal";
+  modal.className = "edit-song-modal";
+
+  const originalSongName =
+    cleanEditSongValue("Nama Lagu", getSongValue(item, "Nama Lagu")).trim();
+
+  modal.innerHTML = `
+    <div class="edit-song-overlay"></div>
+
+    <div class="edit-song-box edit-song-form-box">
+      <div class="edit-song-scroll">
+
+        <h3>Edit Lagu</h3>
+
+        <div class="edit-form-detail-list">
+
+          <div class="edit-form-card">
+            <span>Kategori</span>
+
+            <div class="move-category-wrap edit-category-top">
+              <button
+                type="button"
+                id="editSongCategory"
+                class="edit-category-btn"
+                data-value="${item["Kategori"] || ""}"
+              >
+                <strong>${item["Kategori"] || "Pilih kategori"}</strong>
+                <i class="ri-arrow-down-s-line"></i>
+              </button>
+
+              <div class="move-category-menu edit-category-menu">
+                <button type="button" data-value="Trend 2026">Trend 2026</button>
+                <button type="button" data-value="Trend 2025">Trend 2025</button>
+                <button type="button" data-value="Trend 2024">Trend 2024</button>
+                <button type="button" data-value="Trend 2023 Kebawah">Trend 2023 Kebawah</button>
+                <button type="button" data-value="Lawasan V1">Lawasan V1</button>
+                <button type="button" data-value="Lawasan V2">Lawasan V2</button>
+                <button type="button" data-value="Campursari">Campursari</button>
+                <button type="button" data-value="Religi">Religi</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit-form-card">
+            <span>Nama Lagu</span>
+            <input
+              id="editSongName"
+              class="edit-detail-input"
+              maxlength="30"
+              value="${cleanEditSongValue("Nama Lagu", item["Nama Lagu"] || "")}"
+            >
+          </div>
+
+          <div class="edit-form-three">
+            <div class="edit-form-card">
+              <span>Pria</span>
+              <input
+                id="editSongNadaPria"
+                class="edit-detail-input"
+                maxlength="12"
+                value="${cleanEditSongValue("Nada Pria", item["Nada Pria"] || "")}"
+              >
+            </div>
+
+            <div class="edit-form-card">
+              <span>Duet</span>
+              <input
+                id="editSongNadaDuet"
+                class="edit-detail-input"
+                maxlength="12"
+                value="${cleanEditSongValue("Nada Duet", item["Nada Duet"] || "")}"
+              >
+            </div>
+
+            <div class="edit-form-card">
+              <span>Wanita</span>
+              <input
+                id="editSongNadaWanita"
+                class="edit-detail-input"
+                maxlength="12"
+                value="${cleanEditSongValue("Nada Wanita", item["Nada Wanita"] || "")}"
+              >
+            </div>
+          </div>
+
+          <div class="edit-form-card">
+            <span>Tempo</span>
+            <input
+              id="editSongTempo"
+              class="edit-detail-input"
+              maxlength="8"
+              value="${cleanEditSongValue("Tempo", item["Tempo"] || "")}"
+            >
+          </div>
+
+          <div class="edit-form-card">
+            <span>Catatan</span>
+            <textarea
+              id="editSongNote"
+              class="edit-detail-textarea"
+              maxlength="100"
+            >${cleanEditSongValue("Catatan", item["Catatan"] || "")}</textarea>
+          </div>
+
+        </div>
+
+        <div class="edit-form-actions">
+          <button
+            type="button"
+            class="edit-song-cancel"
+            id="editSongCancel"
+          >
+            Batal
+          </button>
+
+          <button
+            type="button"
+            class="edit-song-save"
+            id="editSongSave"
+          >
+            Simpan
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  lockBodyScroll();
+
+  const nameInput = document.getElementById("editSongName");
+  const categoryInput = document.getElementById("editSongCategory");
+  const categoryMenu = modal.querySelector(".move-category-menu");
+  const categoryText = categoryInput.querySelector("strong");
+
+  categoryInput.onclick = (e) => {
+    e.stopPropagation();
+
+    const wrap =
+      categoryInput.parentElement;
+
+    const isOpen =
+      wrap.classList.contains("active");
+
+    wrap.classList.toggle("active");
+
+    if (!isOpen) {
+
+      requestAnimationFrame(() => {
+
+        const current =
+          categoryInput.dataset.value;
+
+        const selected =
+          categoryMenu.querySelector(
+            `button[data-value="${current}"]`
+          );
+
+        if (selected) {
+          selected.scrollIntoView({
+            block: "center",
+            behavior: "instant"
+          });
+        }
+
+      });
+
+    }
+  };
+
+  categoryMenu.querySelectorAll("button").forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+
+      categoryInput.dataset.value =
+        btn.dataset.value;
+
+      categoryText.innerText =
+        btn.dataset.value;
+
+      categoryInput
+        .parentElement
+        .classList
+        .remove("active");
+
+      checkChanges();
+    };
+  });
+
+  const nadaPria = document.getElementById("editSongNadaPria");
+  const nadaDuet = document.getElementById("editSongNadaDuet");
+  const nadaWanita = document.getElementById("editSongNadaWanita");
+  const tempoInput = document.getElementById("editSongTempo");
+  const noteInput = document.getElementById("editSongNote");
 
   const saveBtn =
-    document.getElementById("editSongSave");
+  document.getElementById("editSongSave");
 
-  const cancelBtn =
-    document.getElementById("editSongCancel");
+let confirmSave = false;
 
-  const originalValue =
-    cleanEditSongValue(
-      field,
-      safeOldValue
-    ).trim();
+const originalData = {
+  kategori: categoryInput.dataset.value,
+  nama: nameInput.value.trim(),
+  pria: nadaPria.value.trim(),
+  duet: nadaDuet.value.trim(),
+  wanita: nadaWanita.value.trim(),
+  tempo: tempoInput.value.trim(),
+  catatan: noteInput.value.trim()
+};
 
-  let confirmMode =
-    false;
+function checkChanges() {
 
-  saveBtn.disabled =
-    true;
+  const changed =
+    originalData.kategori !== categoryInput.dataset.value ||
+    originalData.nama !== nameInput.value.trim() ||
+    originalData.pria !== nadaPria.value.trim() ||
+    originalData.duet !== nadaDuet.value.trim() ||
+    originalData.wanita !== nadaWanita.value.trim() ||
+    originalData.tempo !== tempoInput.value.trim() ||
+    originalData.catatan !== noteInput.value.trim();
 
-  input.addEventListener(
-    "input",
-    () => {
+  saveBtn.disabled = !changed;
 
-      input.value =
-        cleanEditSongValue(
-          field,
-          input.value
-        );
+  if (!changed) {
+    saveBtn.innerHTML = "Simpan";
+    confirmSave = false;
+  }
 
-      const currentValue =
-        input.value.trim();
+  if (changed && confirmSave) {
+    saveBtn.innerHTML = "Simpan";
+    confirmSave = false;
+  }
+}
 
-      confirmMode = false;
+saveBtn.disabled = true;
 
-      saveBtn.innerHTML =
-        "Simpan";
+  nameInput.addEventListener("input", () => {
+    nameInput.value = cleanEditSongValue("Nama Lagu", nameInput.value);
+    checkChanges();
+  });
 
-      saveBtn.disabled =
-        currentValue === originalValue;
-    }
-  );
+  [nadaPria, nadaDuet, nadaWanita].forEach(input => {
+    input.addEventListener("input", () => {
+      input.value = cleanEditSongValue("Nada Pria", input.value);
+      checkChanges();
+    });
+  });
 
-  document
-    .getElementById("editSongCancel")
-    .onclick = () => modal.remove();
+  tempoInput.addEventListener("input", () => {
+    tempoInput.value = cleanEditSongValue("Tempo", tempoInput.value);
+    checkChanges();
+  });
+
+  noteInput.addEventListener("input", () => {
+    noteInput.value = cleanEditSongValue("Catatan", noteInput.value);
+    checkChanges();
+  });
+
+  document.getElementById("editSongCancel").onclick = () => {
+    modal.remove();
+    unlockBodyScroll();
+  };
 
   saveBtn.onclick = async () => {
 
-    const newValue =
-      cleanEditSongValue(
-        field,
-        input.value
-      ).trim();
+    if (!confirmSave) {
 
-    if (
-      newValue === originalValue
-    ) return;
+      confirmSave = true;
 
-    if (!confirmMode) {
+      saveBtn.innerHTML = "Yakin?";
 
-      confirmMode = true;
+      setTimeout(() => {
 
-      saveBtn.classList.add(
-        "anim-change"
-      );
+        if (confirmSave) {
 
-      saveBtn.innerHTML =
-        "Yakin?";
+          confirmSave = false;
+          saveBtn.innerHTML = "Simpan";
 
-      setTimeout(
-        () =>
-          saveBtn.classList.remove(
-            "anim-change"
-          ),
-        180
-      );
+        }
 
+      }, 3000);
+
+      return;
+    }
+
+    confirmSave = false;
+
+    const cancelBtn =
+      document.getElementById("editSongCancel");
+
+    const payload = {
+      "Kategori": categoryInput.dataset.value,
+      "Nama Lagu": cleanEditSongValue("Nama Lagu", nameInput.value).trim(),
+      "Nada Pria": cleanEditSongValue("Nada Pria", nadaPria.value).trim(),
+      "Nada Duet": cleanEditSongValue("Nada Duet", nadaDuet.value).trim(),
+      "Nada Wanita": cleanEditSongValue("Nada Wanita", nadaWanita.value).trim(),
+      "Tempo": cleanEditSongValue("Tempo", tempoInput.value).trim(),
+      "Catatan": cleanEditSongValue("Catatan", noteInput.value).trim()
+    };
+
+    if (!payload["Nama Lagu"]) {
+      await appAlert("Nama lagu wajib diisi", "warning");
+      return;
+    }
+
+    if (!payload["Kategori"]) {
+      await appAlert("Pilih kategori dulu", "warning");
       return;
     }
 
     saveBtn.disabled = true;
     cancelBtn.disabled = true;
-    input.disabled = true;
 
-    modal.classList.add(
-      "form-loading"
-    );
-
-    saveBtn.classList.add(
-      "anim-change"
-    );
+    modal.classList.add("form-loading");
 
     saveBtn.innerHTML = `
       <i class="ri-loader-4-line rotating"></i>
       Menyimpan...
     `;
 
-    setTimeout(
-      () =>
-        saveBtn.classList.remove(
-          "anim-change"
-        ),
-      180
-    );
+    try {
+      const fields = Object.keys(payload);
 
-    const response =
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          action: "updateSong",
-          token: sessionStorage.getItem(
-            "aqila_token"
-          ),
-          songName,
+      for (const field of fields) {
+        const oldValue = cleanEditSongValue(
           field,
-          value: newValue
-        })
-      });
+          item[field] || ""
+        ).trim();
 
-    const result =
-      await response.json();
+        const newValue = payload[field];
 
-    modal.remove();
+        if (newValue === oldValue) continue;
 
-    if (!result.success) {
-      await appAlert(
-        result.message ||
-          "Gagal mengubah data",
-        "error"
-      );
-      return;
-    }
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "updateSong",
+            token: sessionStorage.getItem("aqila_token"),
+            songName: originalSongName,
+            field,
+            value: newValue
+          })
+        });
 
-    await appAlert(
-      "Data lagu berhasil diubah",
-      "success"
-    );
+        const result = await response.json();
 
-    allSongData =
-      allSongData.map(item => {
+        if (!result.success) {
+          throw new Error(result.message || "Gagal mengubah data lagu");
+        }
+      }
 
+      modal.remove();
+      unlockBodyScroll();
+
+      await appAlert("Data lagu berhasil diubah", "success");
+
+      allSongData = allSongData.map(song => {
         if (
-          String(item["Nama Lagu"]).trim() ===
-          String(songName).trim()
+          String(song["Nama Lagu"]).trim() ===
+          String(originalSongName).trim()
         ) {
           return {
-            ...item,
-            [field]: newValue || ""
+            ...song,
+            ...payload
           };
         }
 
-        return item;
+        return song;
       });
 
-    applySongFilter();
+      applySongFilter();
+
+    } catch (error) {
+      console.error(error);
+
+      await appAlert(
+        error.message || "Gagal menyimpan data lagu",
+        "error"
+      );
+
+      saveBtn.disabled = false;
+      cancelBtn.disabled = false;
+      modal.classList.remove("form-loading");
+      saveBtn.innerHTML = "Simpan";
+    }
   };
+}
+
+async function deleteSong(item, modal) {
+  const songName =
+    cleanEditSongValue("Nama Lagu", item["Nama Lagu"] || "").trim();
+
+  const response = await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "deleteSong",
+      token: sessionStorage.getItem("aqila_token"),
+      songName
+    })
+  });
+
+  const result = await response.json();
+
+  if (!result.success) {
+    await appAlert(
+      result.message || "Gagal menghapus lagu",
+      "error"
+    );
+    return;
+  }
+
+  modal.remove();
+  unlockBodyScroll();
+
+  await appAlert("Lagu berhasil dihapus", "success");
+
+  allSongData = allSongData.filter(song =>
+    String(song["Nama Lagu"]).trim() !== String(songName).trim()
+  );
+
+  applySongFilter();
 }
 
 function renderTable(data, role) {
@@ -2472,28 +2758,6 @@ function renderTable(data, role) {
         }
 
         if (
-          getActiveRole() === "playerplus" &&
-          [
-            "Nama Lagu",
-            "Nada Pria",
-            "Nada Duet",
-            "Nada Wanita",
-            "Tempo",
-            "Catatan"
-          ].includes(key)
-        ) {
-          td.classList.add("editable-cell");
-
-          td.addEventListener("click", () => {
-            showEditSongPopup(
-              item["Nama Lagu"],
-              key,
-              value
-            );
-          });
-        }
-
-        if (
           key === "Nama Lagu" &&
           getActiveRole() !== "playerplus"
         ) {
@@ -2544,6 +2808,14 @@ function renderTable(data, role) {
 
         tr.appendChild(td);
       });
+
+      if (getActiveRole() === "playerplus") {
+        tr.classList.add("editable-song-row");
+
+        tr.addEventListener("click", () => {
+          showSongDetailPopup(item);
+        });
+      }
 
       tbody.appendChild(tr);
     });
@@ -2735,27 +3007,14 @@ if (!requestLoaded) {
 
   } else {
 
-    const requestTable =
-      document.querySelector(
-        "#requestSection .table-responsive"
-      );
+  allRequestData = [];
 
-    requestTable.innerHTML = `
-      <div class="loading-state">
+  renderRequestTable(
+    allRequestData
+  );
 
-        <i class="ri-loader-4-line rotating"></i>
-
-        Memuat daftar request...
-
-      </div>
-    `;
-
-    setTimeout(() => {
-
-      loadRequestData();
-
-    }, 3000);
-  }
+  requestLoaded = true;
+}
 
   } catch (error) {
 
@@ -2921,54 +3180,54 @@ function showRequestMovePopup(item) {
     item["Peminta"] || "-";
 
   modal.innerHTML = `
-    <div class="edit-song-overlay"></div>
 
+    <div class="edit-song-overlay"></div>
     <div class="edit-song-box">
 
-      <h3>Detail Request</h3>
+      <div class="edit-song-scroll">
 
-      <div class="request-detail-list">
+        <h3>Detail Request</h3>
 
-        <div>
-          <span>Waktu</span>
-          <strong>${waktu}</strong>
+        <div class="request-detail-list song-detail-list">
+
+          <div class="song-detail-two">
+            <div>
+              <span>Waktu</span>
+              <strong>${waktu}</strong>
+            </div>
+
+            <div>
+              <span>Peminta</span>
+              <strong>${peminta}</strong>
+            </div>
+          </div>
+
+          <div>
+            <span>Nama Lagu</span>
+            <strong>${namaLagu}</strong>
+          </div>
+
+          <div>
+            <span>Pesan</span>
+            <strong>${pesan}</strong>
+          </div>
+
         </div>
 
-        <div>
-          <span>Nama Lagu</span>
-          <strong>${namaLagu}</strong>
-        </div>
+        <div class="song-detail-actions">
+          <button type="button" class="edit-song-cancel" id="requestMoveCancel">
+            Batal
+          </button>
 
-        <div>
-          <span>Pesan</span>
-          <strong>${pesan}</strong>
-        </div>
+          <button type="button" class="song-delete-btn" id="requestMoveDelete">
+            Hapus
+          </button>
 
-        <div>
-          <span>Peminta</span>
-          <strong>${peminta}</strong>
+          <button type="button" class="edit-song-save" id="requestMoveNext">
+            Pindah
+          </button>
         </div>
-
       </div>
-
-      <div class="edit-song-actions">
-        <button
-          type="button"
-          class="edit-song-cancel"
-          id="requestMoveCancel"
-        >
-          Batal
-        </button>
-
-        <button
-          type="button"
-          class="edit-song-save"
-          id="requestMoveNext"
-        >
-          Pindahkan
-        </button>
-      </div>
-
     </div>
   `;
 
@@ -2982,6 +3241,13 @@ function showRequestMovePopup(item) {
       modal.remove();
       unlockBodyScroll();
     };
+
+  document.getElementById("requestMoveDelete").onclick = async () => {
+    await appAlert(
+      "Fitur hapus request belum tersedia.",
+      "warning"
+    );
+  };
 
   document
     .getElementById("requestMoveNext")
@@ -3014,96 +3280,109 @@ function showMoveToSongForm(data) {
   modal.innerHTML = `
     <div class="edit-song-overlay"></div>
 
-    <div class="edit-song-box">
+    <div class="edit-song-box edit-song-form-box">
+      <div class="edit-song-scroll">
 
-      <h3>Pindah ke Daftar Lagu</h3>
+        <h3>Pindah ke Daftar Lagu</h3>
 
-      <label>
-      Nama Lagu
-      </label>
+        <div class="edit-form-detail-list">
 
-      <input
-      id="moveSongName"
-      class="move-song-input"
-      maxlength="30"
-      value="${cleanEditSongValue(
-        "Nama Lagu",
-        data.namaLagu
-      )}"
-      >
+          <div class="edit-form-card">
+            <span>Kategori</span>
 
-      <label>
-      Nada
-      </label>
+            <div class="move-category-wrap edit-category-top">
+              <button
+                type="button"
+                id="moveSongCategory"
+                class="edit-category-btn"
+                data-value=""
+              >
+                <strong>Pilih kategori</strong>
+                <i class="ri-arrow-down-s-line"></i>
+              </button>
 
-      <div class="move-song-nada-grid">
+              <div class="move-category-menu edit-category-menu">
+                <button type="button" data-value="Trend 2026">Trend 2026</button>
+                <button type="button" data-value="Trend 2025">Trend 2025</button>
+                <button type="button" data-value="Trend 2024">Trend 2024</button>
+                <button type="button" data-value="Trend 2023 Kebawah">Trend 2023 Kebawah</button>
+                <button type="button" data-value="Lawasan V1">Lawasan V1</button>
+                <button type="button" data-value="Lawasan V2">Lawasan V2</button>
+                <button type="button" data-value="Campursari">Campursari</button>
+                <button type="button" data-value="Religi">Religi</button>
+              </div>
+            </div>
+          </div>
 
-      <input
-      id="moveSongNadaPria"
-      class="move-song-input"
-      maxlength="12"
-      placeholder="Pria"
-      >
+          <div class="edit-form-card">
+            <span>Nama Lagu</span>
+            <input
+              id="moveSongName"
+              class="edit-detail-input"
+              maxlength="30"
+              value="${cleanEditSongValue("Nama Lagu", data.namaLagu)}"
+            >
+          </div>
 
-      <input
-      id="moveSongNadaDuet"
-      class="move-song-input"
-      maxlength="12"
-      placeholder="Duet"
-      >
+          <div class="edit-form-three">
+            <div class="edit-form-card">
+              <span>Pria</span>
+              <input id="moveSongNadaPria" class="edit-detail-input" maxlength="12">
+            </div>
 
-      <input
-      id="moveSongNadaWanita"
-      class="move-song-input"
-      maxlength="12"
-      placeholder="Wanita"
-      >
+            <div class="edit-form-card">
+              <span>Duet</span>
+              <input id="moveSongNadaDuet" class="edit-detail-input" maxlength="12">
+            </div>
+
+            <div class="edit-form-card">
+              <span>Wanita</span>
+              <input id="moveSongNadaWanita" class="edit-detail-input" maxlength="12">
+            </div>
+          </div>
+
+          <div class="edit-form-card">
+            <span>Tempo</span>
+            <input
+              id="moveSongTempo"
+              class="edit-detail-input"
+              maxlength="8"
+            >
+          </div>
+
+          <div class="edit-form-card">
+            <span>Catatan</span>
+            <textarea
+              id="moveSongNote"
+              class="edit-detail-textarea"
+              maxlength="100"
+            >${cleanEditSongValue(
+              "Catatan",
+              data.pesan === "-" ? "" : data.pesan
+            ).trimStart()}</textarea>
+          </div>
+
+        </div>
+
+        <div class="edit-form-actions">
+          <button
+            type="button"
+            class="edit-song-cancel"
+            id="moveSongCancel"
+          >
+            Batal
+          </button>
+
+          <button
+            type="button"
+            class="edit-song-save"
+            id="moveSongSave"
+          >
+            Pindahkan
+          </button>
+        </div>
 
       </div>
-
-      <label>
-      Tempo
-      </label>
-
-      <input
-      id="moveSongTempo"
-      class="move-song-input"
-      maxlength="8"
-      placeholder="Tempo"
-      >
-
-      <label>
-      Catatan
-      </label>
-
-    <textarea
-      id="moveSongNote"
-      maxlength="100"
-      placeholder="Catatan">${cleanEditSongValue(
-        "Catatan",
-        data.pesan === "-"
-          ? ""
-          : data.pesan
-      ).trimStart()}</textarea>
-
-      <div class="edit-song-actions">
-        <button
-          type="button"
-          class="edit-song-cancel"
-          id="moveSongCancel"
-        >
-          Batal
-        </button>
-
-        <button
-          type="button"
-          class="edit-song-save"
-          id="moveSongSave"
-        >
-          Simpan
-        </button>
-      </div>
-
     </div>
   `;
 
@@ -3112,6 +3391,68 @@ function showMoveToSongForm(data) {
 
   const nameInput =
     document.getElementById("moveSongName");
+
+  const categoryInput =
+    document.getElementById("moveSongCategory");
+
+  const categoryMenu =
+    modal.querySelector(".move-category-menu");
+
+  const categoryText =
+    categoryInput.querySelector("strong");
+
+  categoryInput.onclick = (e) => {
+    e.stopPropagation();
+
+    const wrap = categoryInput.parentElement;
+    const isOpen = wrap.classList.contains("active");
+
+    wrap.classList.toggle("active");
+
+    if (!isOpen) {
+      requestAnimationFrame(() => {
+        const current = categoryInput.dataset.value;
+
+        if (!current) {
+          categoryMenu.scrollTop = 0;
+          return;
+        }
+
+        const selected = categoryMenu.querySelector(
+          `button[data-value="${current}"]`
+        );
+
+        if (selected) {
+          selected.scrollIntoView({
+            block: "center",
+            behavior: "instant"
+          });
+        }
+      });
+    }
+  };
+
+  categoryMenu
+    .querySelectorAll("button")
+    .forEach(btn => {
+
+      btn.onclick = (e) => {
+        e.stopPropagation();
+
+        categoryInput.dataset.value =
+          btn.dataset.value;
+
+        categoryText.innerText =
+          btn.dataset.value;
+
+        categoryInput
+          .parentElement
+          .classList
+          .remove("active");
+
+        checkMoveChanges();
+      };
+    });
 
   const nadaPria =
     document.getElementById(
@@ -3134,38 +3475,62 @@ function showMoveToSongForm(data) {
   const noteInput =
     document.getElementById("moveSongNote");
 
+  const saveBtn =
+    document.getElementById("moveSongSave");
+
+  let confirmMove = false;
+
+  function checkMoveChanges() {
+    const changed =
+      categoryInput.dataset.value.trim() !== "" ||
+      nameInput.value.trim() !== cleanEditSongValue("Nama Lagu", data.namaLagu).trim() ||
+      nadaPria.value.trim() !== "" ||
+      nadaDuet.value.trim() !== "" ||
+      nadaWanita.value.trim() !== "" ||
+      tempoInput.value.trim() !== "" ||
+      noteInput.value.trim() !== cleanEditSongValue(
+        "Catatan",
+        data.pesan === "-" ? "" : data.pesan
+      ).trim();
+
+    saveBtn.disabled = !changed;
+
+    if (!changed || confirmMove) {
+      confirmMove = false;
+      saveBtn.innerHTML = "Pindahkan";
+    }
+  }
+
+  saveBtn.disabled = true;
+
   nameInput.addEventListener("input", () => {
     nameInput.value =
       cleanEditSongValue("Nama Lagu", nameInput.value);
+
+    checkMoveChanges();
   });
 
-  [
-    nadaPria,
-    nadaDuet,
-    nadaWanita
-  ].forEach(input => {
+  [nadaPria, nadaDuet, nadaWanita].forEach(input => {
+    input.addEventListener("input", () => {
+      input.value =
+        cleanEditSongValue("Nada Pria", input.value);
 
-    input.addEventListener(
-      "input",
-      () => {
-
-        input.value =
-          cleanEditSongValue(
-            "Nada Pria",
-            input.value
-          );
-      }
-    );
+      checkMoveChanges();
+    });
   });
 
   tempoInput.addEventListener("input", () => {
     tempoInput.value =
       cleanEditSongValue("Tempo", tempoInput.value);
+
+    checkMoveChanges();
   });
 
   noteInput.addEventListener("input", () => {
     noteInput.value =
       cleanEditSongValue("Catatan", noteInput.value);
+
+    checkMoveChanges();
   });
 
   document
@@ -3175,19 +3540,134 @@ function showMoveToSongForm(data) {
       unlockBodyScroll();
     };
 
-  document
-    .getElementById("moveSongSave")
-    .onclick = async () => {
+  saveBtn.onclick = async () => {
 
-      await appAlert(
-        "Frontend siap. Backend code.gs untuk simpan lagu perlu ditambahkan.",
-        "info"
+      if (!confirmMove) {
+        confirmMove = true;
+        saveBtn.innerHTML = "Yakin?";
+
+        setTimeout(() => {
+          if (confirmMove) {
+            confirmMove = false;
+            saveBtn.innerHTML = "Pindahkan";
+          }
+        }, 3000);
+
+        return;
+      }
+
+      confirmMove = false;
+
+      const cancelBtn =
+        document.getElementById("moveSongCancel");
+
+      const namaLagu =
+        cleanEditSongValue(
+          "Nama Lagu",
+          nameInput.value
+        ).trim();
+
+      const kategori =
+        categoryInput.dataset.value;
+
+      if (!namaLagu) {
+
+        await appAlert(
+          "Nama lagu wajib diisi",
+          "warning"
+        );
+
+        return;
+      }
+
+      if (!kategori) {
+
+        await appAlert(
+          "Pilih kategori dulu",
+          "warning"
+        );
+
+        return;
+      }
+
+      saveBtn.disabled = true;
+      cancelBtn.disabled = true;
+
+      modal.classList.add(
+        "form-loading"
       );
 
-      modal.remove();
-      unlockBodyScroll();
+      saveBtn.innerHTML = `
+        <i class="ri-loader-4-line rotating"></i>
+        Memindahkan...
+      `;
+
+      try {
+
+        const response =
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({
+              action: "moveRequestToSong",
+              token: sessionStorage.getItem("aqila_token"),
+
+              requestNamaLagu: data.namaLagu,
+              requestWaktu: data.waktu,
+
+              kategori:
+              kategori,
+
+              namaLagu,
+              nadaPria: nadaPria.value.trim(),
+              nadaDuet: nadaDuet.value.trim(),
+              nadaWanita: nadaWanita.value.trim(),
+              tempo: tempoInput.value.trim(),
+              catatan: noteInput.value.trim()
+            })
+          });
+
+        const result =
+          await response.json();
+
+        if (!result.success) {
+          await appAlert(
+            result.message ||
+              "Gagal memindahkan request",
+            "error"
+          );
+
+          saveBtn.disabled = false;
+          cancelBtn.disabled = false;
+          modal.classList.remove("form-loading");
+          saveBtn.innerHTML = "Simpan";
+
+          return;
+        }
+
+        modal.remove();
+        unlockBodyScroll();
+
+        await appAlert(
+          "Request berhasil dipindahkan ke daftar lagu",
+          "success"
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        await appAlert(
+          "Gagal terhubung ke server",
+          "error"
+        );
+
+        saveBtn.disabled = false;
+        cancelBtn.disabled = false;
+        modal.classList.remove("form-loading");
+        saveBtn.innerHTML = "Simpan";
+      }
     };
-}
+  }
 
 function renderRequestTable(data) {
 
@@ -3559,20 +4039,12 @@ requestBody =
 
         if (key === "Nama Lagu") {
 
-          td.classList.add(
-            "text-left",
-            "song-title-link"
-          );
+          td.classList.add("text-left");
 
-          td.addEventListener(
-            "click",
-            () => {
+          if (getActiveRole() !== "playerplus") {
+            td.classList.add("song-title-link");
 
-              if (getActiveRole() === "playerplus") {
-                showRequestMovePopup(item);
-                return;
-              }
-
+            td.addEventListener("click", () => {
               const songName =
                 String(value || "").trim();
 
@@ -3585,13 +4057,21 @@ requestBody =
                 item["LINK"] ||
                 item["link"]
               );
-            }
-          );
+            });
+          }
         }
 
         tr.appendChild(td);
 
       });
+
+      if (getActiveRole() === "playerplus") {
+        tr.classList.add("request-playerplus-row");
+
+        tr.addEventListener("click", () => {
+          showRequestMovePopup(item);
+        });
+      }
 
       requestBody.appendChild(
         tr
@@ -5061,6 +5541,7 @@ if (
 
     const roleLabel = {
       player: "Player",
+      playerplus: "Player",
       vocal: "Vocal",
       lainnya: "Umum"
     };
@@ -5070,6 +5551,11 @@ if (
         Date.now();
 
       isSendingRequest = true;
+
+      requestForm.classList.add("form-loading");
+
+      namaLaguInput.disabled = true;
+      catatanInput.disabled = true;
 
       requestBtn.disabled = true;
 
@@ -5123,13 +5609,6 @@ if (
           "warning"
         );
 
-        requestBtn.disabled = false;
-
-        requestBtn.innerText =
-          "Kirim Request";
-
-        isSendingRequest = false;
-
         return;
       }
 
@@ -5158,8 +5637,6 @@ if (
       catatanCounter.textContent =
         "0/100";
 
-      loadRequestData();
-
     } catch (error) {
 
       console.error(error);
@@ -5169,13 +5646,22 @@ if (
         "error"
       );
 
-      requestBtn.disabled = false;
+    } finally {
 
-      requestBtn.innerText =
-        "Kirim Request";
+      isSendingRequest = false;
+
+      requestForm.classList.remove("form-loading");
+
+      namaLaguInput.disabled = false;
+      catatanInput.disabled = false;
+
+      updateRequestCooldown();
+
+      if (!requestBtn.disabled) {
+        requestBtn.innerText =
+          "Kirim Request";
+      }
     }
-
-    isSendingRequest = false;
   }
 );
 
@@ -5950,7 +6436,7 @@ setInterval(() => {
 
   loadNotification();
 
-}, 5000);
+}, 2000);
 
 if ("serviceWorker" in navigator) {
 
