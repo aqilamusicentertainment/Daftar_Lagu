@@ -1,8 +1,8 @@
 const APP_VERSION =
-  "1.1.2";
+  "1.1.3";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxPdJWrXtLswsVKJDIJprf6WE-HLf1HMdSccQgkHrsNIKsGmCu1XAb7mhxWLTI4L3Vr/exec";
+  "https://script.google.com/macros/s/AKfycbzDJNbQ-Tc7K7wOHTnZRWg7szeWZkDx51oa9zJ0zj5FwDspOA5wMVbREySj2IlMK3bb/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -42,6 +42,7 @@ let notifOpened = false;
 let isLoadingSongs = false;
 let isLoadingRequests = false;
 let isLoadingNotif = false;
+let isForceLoggingOut = false;
 
 let isSwitchingRole = false;
 
@@ -264,6 +265,46 @@ function appPopup({
       );
     }
   });
+}
+
+async function forceLogoutByAuthChange() {
+
+  if (isForceLoggingOut)
+    return;
+
+  isForceLoggingOut =
+    true;
+
+  await appAlert(
+    "Sesi berakhir karena ada pembaruan. Silakan login kembali.",
+    "warning"
+  );
+
+  localStorage.removeItem(
+    "aqila_role"
+  );
+
+  localStorage.removeItem(
+    "aqila_last_active"
+  );
+
+  localStorage.removeItem(
+    "aqila_login_time"
+  );
+
+  localStorage.removeItem(
+    "aqila_yt_search_choice"
+  );
+
+  localStorage.removeItem(
+    "aqila_tab"
+  );
+
+  sessionStorage.removeItem(
+    "aqila_token"
+  );
+
+  location.reload();
 }
 
 function appAlert(
@@ -1629,6 +1670,15 @@ async function loadSongData(role) {
 
     const data =
       await response.json();
+
+    if (
+      data &&
+      data.success === false &&
+      data.message === "Unauthorized"
+    ) {
+      await forceLogoutByAuthChange();
+      return;
+    }
 
     if (!Array.isArray(data)) {
       setTimeout(() => {
@@ -3144,6 +3194,15 @@ if (!requestLoaded) {
     
     const data =
       await response.json();
+
+    if (
+      data &&
+      data.success === false &&
+      data.message === "Unauthorized"
+    ) {
+      await forceLogoutByAuthChange();
+      return;
+    }
 
   if (
     Array.isArray(data) &&
@@ -5544,8 +5603,12 @@ window.addEventListener(
           "aqila_yt_search_choice"
         );
 
+        localStorage.removeItem(
+          "aqila_tab"
+        );
+
         await appAlert(
-          "Sesi berakhir, silakan login kembali.",
+          "Sesi login telah berakhir",
           "warning"
         );
 
@@ -5553,6 +5616,7 @@ window.addEventListener(
 
         return;
       }
+      
     }
 
     if (
