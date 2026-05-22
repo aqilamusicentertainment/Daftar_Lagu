@@ -3563,19 +3563,9 @@ body.dark #requestSection tbody tr:nth-child(even) td {
   background: rgba(255, 255, 255, 0.035);
 }
 
-body.dark #dashboardSection tbody tr:hover td,
-body.dark #requestSection tbody tr:hover td {
-  background: rgba(255, 122, 0, 0.08);
-}
-
 body:not(.dark) #dashboardSection tbody tr:nth-child(even) td,
 body:not(.dark) #requestSection tbody tr:nth-child(even) td {
   background: rgba(0, 0, 0, 0.025);
-}
-
-body:not(.dark) #dashboardSection tbody tr:hover td,
-body:not(.dark) #requestSection tbody tr:hover td {
-  background: rgba(255, 122, 0, 0.08);
 }
 
 body.dark #dashboardSection thead,
@@ -5754,7 +5744,6 @@ body.dark #editSongModal .edit-form-card {
   z-index: 100 !important;
 }
 
-/* SAMAKAN FORM PINDAH DENGAN EDIT LAGU */
 #moveToSongModal .edit-song-box {
   width: min(92vw, 520px) !important;
   max-height: 85vh !important;
@@ -6061,4 +6050,264 @@ body.playerplus-mode #requestSection .request-playerplus-row:hover td {
 
 body.playerplus-mode #requestSection .request-playerplus-row:hover td * {
   text-decoration: none !important;
+}
+
+body.role-switch-loading #songTables,
+body.role-switch-loading #requestSection .table-responsive,
+body.role-switch-loading #requestPagination,
+body.role-switch-loading #dashboardSection .pagination {
+  pointer-events: none;
+  user-select: none;
+}
+
+body.role-switch-loading #songTables,
+body.role-switch-loading #requestSection .table-responsive {
+  opacity: .65;
+}
+
+.song-detail-actions.two {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+#songDetailComment, #requestDetailComment {
+  opacity: .65;
+}
+
+#dashboardSection #songTables table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+#dashboardSection #songTables th,
+#dashboardSection #songTables td {
+  width: 50% !important;
+  text-align: left !important;
+}
+
+#dashboardSection #songTables th {
+  text-align: center !important;
+}
+
+#dashboardSection #songTables td {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+#dashboardSection tbody tr:hover {
+  background: transparent !important;
+}
+
+#dashboardSection #songTables td:not(:empty):hover {
+  background:
+    rgba(
+      255,
+      153,
+      0,
+      0.08
+    ) !important;
+
+  transition:
+    background .2s ease;
+
+  cursor: pointer;
+}
+
+#dashboardSection #songTables td {
+  position: relative;
+  overflow: hidden;
+}
+
+#dashboardSection #songTables td:empty {
+  pointer-events: none;
+}
+
+#dashboardSection #songTables table {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+}
+
+#dashboardSection #songTables th,
+#dashboardSection #songTables td {
+  width: 50% !important;
+  text-align: left !important;
+}
+
+#dashboardSection #songTables th {
+  text-align: center !important;
+}
+
+#dashboardSection #songTables td {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+@media (max-width: 420px) {
+  #dashboardSection #songTables td {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    word-break: break-word !important;
+    line-height: 1.4 !important;
+  }
+
+  #dashboardSection #songTables th {
+    white-space: normal !important;
+  }
+}
+
+#dashboardSection #songTables .song-title-link:hover {
+  text-decoration: none !important;
+}
+
+#requestSection .table-responsive {
+  overflow-x: auto !important;
+}
+
+#requestSection table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+@media (max-width: 767px) {
+  #requestSection table {
+    min-width: 380px !important; 
+    table-layout: fixed !important;
+  }
+
+  #requestSection th:nth-child(1),
+  #requestSection td:nth-child(1) {
+    width: 130px !important;
+    min-width: 130px !important;
+    max-width: 130px !important;
+  }
+
+  #requestSection th:nth-child(2),
+  #requestSection td:nth-child(2) {
+    width: auto !important;
+    min-width: 240px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  #requestSection table {
+    min-width: 760px !important;
+    table-layout: fixed !important;
+  }
+
+  #requestSection th:nth-child(1),
+  #requestSection td:nth-child(1),
+  #requestSection th:nth-child(3),
+  #requestSection td:nth-child(3) {
+    width: 130px !important;
+    min-width: 130px !important;
+    max-width: 130px !important;
+    text-align: center !important;
+  }
+
+  #requestSection th:nth-child(2),
+  #requestSection td:nth-child(2),
+  #requestSection th:nth-child(4),
+  #requestSection td:nth-child(4) {
+    min-width: 190px !important;
+  }
+
+  #requestSection th:nth-child(2),
+  #requestSection td:nth-child(2) {
+    border-right: 18px solid var(--card) !important;
+  }
+
+  #requestSection th:nth-child(3),
+  #requestSection td:nth-child(3) {
+    border-left: 18px solid var(--card) !important;
+  }
+}
+
+#requestSection tbody tr:hover td {
+  color: var(--text) !important;
+}
+
+#requestSection tbody tr:has(td:nth-child(1):hover) td:nth-child(1),
+#requestSection tbody tr:has(td:nth-child(1):hover) td:nth-child(2),
+#requestSection tbody tr:has(td:nth-child(2):hover) td:nth-child(1),
+#requestSection tbody tr:has(td:nth-child(2):hover) td:nth-child(2) {
+  background: rgba(255,153,0,.08) !important;
+  color: var(--primary) !important;
+}
+
+#requestSection tbody tr:has(td:nth-child(3):hover) td:nth-child(3),
+#requestSection tbody tr:has(td:nth-child(3):hover) td:nth-child(4),
+#requestSection tbody tr:has(td:nth-child(4):hover) td:nth-child(3),
+#requestSection tbody tr:has(td:nth-child(4):hover) td:nth-child(4) {
+  background: rgba(255,153,0,.08) !important;
+  color: var(--primary) !important;
+}
+
+#requestSection td:hover,
+#requestSection .song-title-link:hover {
+  text-decoration: none !important;
+}
+
+#requestSection td:empty {
+  pointer-events: none !important;
+}
+
+body.playerplus-mode #requestSection tbody tr:hover td {
+  color: var(--text) !important;
+}
+
+#requestSection tbody td:hover {
+  background: rgba(255,153,0,.08) !important;
+  color: var(--primary) !important;
+}
+
+body.playerplus-mode #requestSection tbody tr:has(td:nth-child(1):hover) td:nth-child(1),
+body.playerplus-mode #requestSection tbody tr:has(td:nth-child(1):hover) td:nth-child(2),
+body.playerplus-mode #requestSection tbody tr:has(td:nth-child(2):hover) td:nth-child(1),
+body.playerplus-mode #requestSection tbody tr:has(td:nth-child(2):hover) td:nth-child(2) {
+  background: rgba(255,153,0,.08) !important;
+  color: var(--primary) !important;
+}
+
+body.playerplus-mode #requestSection tbody tr:has(td:nth-child(3):hover) td:nth-child(3),
+body.playerplus-mode #requestSection tbody tr:has(td:nth-child(3):hover) td:nth-child(4),
+body.playerplus-mode #requestSection tbody tr:has(td:nth-child(4):hover) td:nth-child(3),
+body.playerplus-mode #requestSection tbody tr:has(td:nth-child(4):hover) td:nth-child(4) {
+  background: rgba(255,153,0,.08) !important;
+  color: var(--primary) !important;
+}
+
+#requestSection td:nth-child(2),
+#requestSection td:nth-child(4),
+#requestSection .song-title-link {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+
+  line-height: 1.45;
+  text-align: left !important;
+}
+
+@media (min-width:768px) {
+  #requestSection th:nth-child(2),
+  #requestSection td:nth-child(2),
+  #requestSection th:nth-child(4),
+  #requestSection td:nth-child(4) {
+    min-width: 180px !important;
+  }
+}
+
+@media (max-width:767px) {
+  #requestSection th:nth-child(2),
+  #requestSection td:nth-child(2) {
+    min-width: 160px !important;
+  }
+
+  #requestSection th:nth-child(4),
+  #requestSection td:nth-child(4) {
+    min-width: 160px !important;
+  }
 }

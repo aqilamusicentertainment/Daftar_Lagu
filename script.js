@@ -2,7 +2,7 @@ const APP_VERSION =
   "1.1.2";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyqZkGzhFsQcJxBKc4-uPGf24Ga_422pJyALo1IW7Tl04M4PhcvlffgdaGeU6OlTqwN/exec";
+  "https://script.google.com/macros/s/AKfycbxPdJWrXtLswsVKJDIJprf6WE-HLf1HMdSccQgkHrsNIKsGmCu1XAb7mhxWLTI4L3Vr/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -43,8 +43,18 @@ let isLoadingSongs = false;
 let isLoadingRequests = false;
 let isLoadingNotif = false;
 
+let isSwitchingRole = false;
+
+function setRoleSwitchLoading(isLoading) {
+  isSwitchingRole = isLoading;
+  document.body.classList.toggle("role-switch-loading", isLoading);
+}
+
 const SESSION_TIMEOUT =
   60 * 60 * 1000;
+
+const MAX_SESSION_DURATION =
+  8 * 60 * 60 * 1000;
 
 let sessionTimer = null;
 
@@ -769,8 +779,8 @@ function getSongItemsPerPage() {
   }
 
   if (
-    getActiveRole() === "lainnya" &&
-    window.innerWidth >= 650
+    window.innerWidth >= 650 ||
+    isPrintMode
   ) {
     total *= 2;
   }
@@ -801,10 +811,7 @@ function getRequestItemsPerPage() {
     total = 15;
   }
 
-  if (
-    getActiveRole() === "lainnya" &&
-    window.innerWidth >= 768
-  ) {
+  if (window.innerWidth >= 768) {
     total *= 2;
   }
 
@@ -1070,6 +1077,11 @@ loginForm.addEventListener(
       localStorage.setItem(
         "aqila_role",
         role
+      );
+
+      localStorage.setItem(
+        "aqila_login_time",
+        Date.now()
       );
 
       fetch(
@@ -1402,10 +1414,14 @@ roleBadge.onclick = async () => {
     activeRole !== "playerplus"
   ) return;
 
+  if (isSwitchingRole) return;
+
   if (
     getActiveRole() ===
     "playerplus"
   ) {
+
+    setRoleSwitchLoading(true);
 
     roleBadge.innerHTML = `
       <i class="
@@ -1450,6 +1466,8 @@ roleBadge.onclick = async () => {
     roleBadge.style.pointerEvents =
       "";
 
+    setRoleSwitchLoading(false);
+
     return;
   }
 
@@ -1458,6 +1476,8 @@ roleBadge.onclick = async () => {
 
   if (pin === null)
     return;
+
+  setRoleSwitchLoading(true);
 
   roleBadge.innerHTML = `
     <i class="ri-loader-4-line rotating"></i>
@@ -1468,48 +1488,91 @@ roleBadge.onclick = async () => {
     "badge-loading"
   );
 
-  const response =
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "verifyPlayerPlusPin",
-        token: sessionStorage.getItem("aqila_token"),
-        pin
-      })
-    });
+  roleBadge.style.pointerEvents =
+    "none";
 
-  const result =
-    await response.json();
+  try {
 
-  if (!result.success) {
-    roleBadge.classList.remove("badge-loading");
-    roleBadge.innerText = "PLAYER";
+    const response =
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "verifyPlayerPlusPin",
+          token: sessionStorage.getItem("aqila_token"),
+          pin
+        })
+      });
+
+    const result =
+      await response.json();
+
+    if (!result.success) {
+
+      roleBadge.classList.remove(
+        "badge-loading"
+      );
+
+      roleBadge.innerText =
+        "PLAYER";
+
+      roleBadge.style.pointerEvents =
+        "";
+
+      setRoleSwitchLoading(false);
+
+      await appAlert(
+        result.message || "PIN salah",
+        "error"
+      );
+
+      return;
+    }
+
+    currentRole =
+      "playerplus";
+
+    localStorage.setItem(
+      "aqila_role",
+      "playerplus"
+    );
 
     await appAlert(
-      result.message || "PIN salah",
+      "Mode Player+ aktif",
+      "success"
+    );
+
+    roleBadge.classList.remove(
+      "badge-loading"
+    );
+
+    roleBadge.style.pointerEvents =
+      "";
+
+    showApp("playerplus");
+
+    setRoleSwitchLoading(false);
+
+  } catch (error) {
+
+    console.error(error);
+
+    roleBadge.classList.remove(
+      "badge-loading"
+    );
+
+    roleBadge.innerText =
+      "PLAYER";
+
+    roleBadge.style.pointerEvents =
+      "";
+
+    setRoleSwitchLoading(false);
+
+    await appAlert(
+      "Gagal masuk Player+",
       "error"
     );
-    return;
   }
-
-  currentRole = "playerplus";
-
-  localStorage.setItem(
-    "aqila_role",
-    "playerplus"
-  );
-
-  
-  await appAlert(
-    "Mode Player+ aktif",
-    "success"
-  );
-
-  roleBadge.classList.remove(
-    "badge-loading"
-  );
-
-  showApp("playerplus");
 };
 
   applyRoleVisibility(role);  
@@ -1649,6 +1712,46 @@ function normalizeSongLink(link) {
   }
 
   return `https://${value}`;
+}
+
+function findSongLinkByName(songName) {
+  const target =
+    String(songName || "")
+      .trim()
+      .toLowerCase();
+
+  if (!target) return "";
+
+  const found =
+    allSongData.find(song =>
+      String(song["Nama Lagu"] || "")
+        .trim()
+        .toLowerCase() === target
+    );
+
+  if (!found) return "";
+
+  return (
+    found["Link"] ||
+    found["LINK"] ||
+    found["link"] ||
+    ""
+  );
+}
+
+function getRequestLink(item) {
+  return (
+    item["Link"] ||
+    item["LINK"] ||
+    item["link"] ||
+    item["URL"] ||
+    item["Url"] ||
+    item["url"] ||
+    item["Chord"] ||
+    item["Lirik"] ||
+    findSongLinkByName(item["Nama Lagu"]) ||
+    ""
+  );
 }
 
 function showSongLinkModal(songName, customLink) {
@@ -1854,6 +1957,8 @@ function showSongDetailPopup(item) {
   modal.id = "songDetailModal";
   modal.className = "edit-song-modal";
 
+  const role = getActiveRole();
+
   const namaLagu = getSongValue(item, "Nama Lagu");
   const nadaPria = getSongValue(item, "Nada Pria");
   const nadaDuet = getSongValue(item, "Nada Duet");
@@ -1861,6 +1966,12 @@ function showSongDetailPopup(item) {
   const tempo = getSongValue(item, "Tempo");
   const catatan = getSongValue(item, "Catatan");
   const kategori = getSongValue(item, "Kategori");
+
+  const isPlayerPlus =
+    role === "playerplus";
+
+  const isVocal =
+    role === "vocal";
 
   modal.innerHTML = `
     <div class="edit-song-overlay"></div>
@@ -1872,71 +1983,110 @@ function showSongDetailPopup(item) {
 
         <div class="request-detail-list song-detail-list">
 
-          <div>
-            <span>Nama Lagu</span>
-            <strong>${namaLagu}</strong>
-          </div>
+          ${isVocal ? `
+            <div>
+              <span>Nama Lagu</span>
+              <strong>${namaLagu}</strong>
+            </div>
 
-          <div class="song-detail-two">
             <div>
               <span>Kategori</span>
               <strong>${kategori}</strong>
             </div>
 
             <div>
-              <span>Tempo</span>
-              <strong>${tempo}</strong>
+              <span>Catatan</span>
+              <strong>${catatan}</strong>
             </div>
-          </div>
-
-          <div class="song-detail-three">
+          ` : `
             <div>
-              <span>Pria</span>
-              <strong>${nadaPria}</strong>
+              <span>Nama Lagu</span>
+              <strong>${namaLagu}</strong>
+            </div>
+
+            <div class="song-detail-two">
+              <div>
+                <span>Kategori</span>
+                <strong>${kategori}</strong>
+              </div>
+
+              <div>
+                <span>Tempo</span>
+                <strong>${tempo}</strong>
+              </div>
+            </div>
+
+            <div class="song-detail-three">
+              <div>
+                <span>Pria</span>
+                <strong>${nadaPria}</strong>
+              </div>
+
+              <div>
+                <span>Duet</span>
+                <strong>${nadaDuet}</strong>
+              </div>
+
+              <div>
+                <span>Wanita</span>
+                <strong>${nadaWanita}</strong>
+              </div>
             </div>
 
             <div>
-              <span>Duet</span>
-              <strong>${nadaDuet}</strong>
+              <span>Catatan</span>
+              <strong>${catatan}</strong>
             </div>
-
-            <div>
-              <span>Wanita</span>
-              <strong>${nadaWanita}</strong>
-            </div>
-          </div>
-
-          <div>
-            <span>Catatan</span>
-            <strong>${catatan}</strong>
-          </div>
+          `}
 
         </div>
 
-        <div class="song-detail-actions">
+        <div class="song-detail-actions ${isPlayerPlus ? "" : "two"}">
           <button
             type="button"
             class="edit-song-cancel"
             id="songDetailCancel"
           >
-            Batal
+            ${isPlayerPlus ? "Batal" : "Tutup"}
           </button>
 
-          <button
-            type="button"
-            class="song-delete-btn"
-            id="songDetailDelete"
-          >
-            Hapus
-          </button>
+          ${
+            isPlayerPlus
+              ? `
+                <button
+                  type="button"
+                  class="song-delete-btn"
+                  id="songDetailDelete"
+                >
+                  Hapus
+                </button>
 
-          <button
-            type="button"
-            class="edit-song-save"
-            id="songDetailEdit"
-          >
-            Edit
-          </button>
+                <button
+                  type="button"
+                  class="edit-song-save"
+                  id="songDetailEdit"
+                >
+                  Edit
+                </button>
+              `
+              : `
+                <button
+                  type="button"
+                  class="edit-song-save"
+                  id="songDetailChord"
+                >
+                  ${isVocal ? "Lihat Lirik" : "Lihat Chord"}
+                </button>
+
+                <button
+                  type="button"
+                  class="edit-song-save"
+                  id="songDetailComment"
+                >
+                  Komentar
+                </button>
+              `
+          }
         </div>
 
       </div>
@@ -1950,6 +2100,28 @@ function showSongDetailPopup(item) {
     modal.remove();
     unlockBodyScroll();
   };
+
+  if (!isPlayerPlus) {
+    document.getElementById("songDetailChord").onclick = () => {
+      const finalLink =
+        normalizeSongLink(
+          item["Link"] ||
+          item["LINK"] ||
+          item["link"]
+        ) ||
+        getDefaultSongLink(namaLagu);
+
+      window.open(
+        finalLink,
+        "_blank"
+      );
+
+      modal.remove();
+      unlockBodyScroll();
+    };
+
+    return;
+  }
 
   document.getElementById("songDetailEdit").onclick = () => {
     modal.remove();
@@ -2441,35 +2613,9 @@ function renderTable(data, role) {
 
   songTables.innerHTML = "";
 
-  let keys = [];
-
-  if (
-    role === "player" ||
-    role === "playerplus"
-  ) {
-
-    keys = [
-      "Nama Lagu",
-      "Nada Pria",
-      "Nada Duet",
-      "Nada Wanita",
-      "Tempo",
-      "Catatan"
-    ];
-
-  } else if (role === "vocal") {
-
-    keys = [
-      "Nama Lagu",
-      "Catatan"
-    ];
-
-  } else {
-
-    keys = [
-      "Nama Lagu"
-    ];
-  }
+  let keys = [
+    "Nama Lagu"
+  ];
 
   const sortedCategories =
 
@@ -2586,11 +2732,8 @@ function renderTable(data, role) {
       document.createElement("table");
 
     const isDoubleColumn =
-      role === "lainnya" &&
-      (
-        window.innerWidth >= 650 ||
-        isPrintMode
-      );
+      window.innerWidth >= 650 ||
+      isPrintMode;
 
     if (isDoubleColumn) {
 
@@ -2649,6 +2792,18 @@ function renderTable(data, role) {
             td.addEventListener(
               "click",
               () => {
+                const activeRole =
+                  getActiveRole();
+
+                if (
+                  activeRole === "playerplus" ||
+                  activeRole === "player" ||
+                  activeRole === "vocal"
+                ) {
+                  showSongDetailPopup(item);
+                  return;
+                }
+
                 showSongLinkModal(
                   value,
                   item["Link"] ||
@@ -2759,7 +2914,9 @@ function renderTable(data, role) {
 
         if (
           key === "Nama Lagu" &&
-          getActiveRole() !== "playerplus"
+          getActiveRole() !== "playerplus" &&
+          getActiveRole() !== "player" &&
+          getActiveRole() !== "vocal"
         ) {
 
           td.classList.add(
@@ -2809,7 +2966,11 @@ function renderTable(data, role) {
         tr.appendChild(td);
       });
 
-      if (getActiveRole() === "playerplus") {
+      if (
+        getActiveRole() === "playerplus" ||
+        getActiveRole() === "player" ||
+        getActiveRole() === "vocal"
+      ) {
         tr.classList.add("editable-song-row");
 
         tr.addEventListener("click", () => {
@@ -3259,9 +3420,127 @@ function showRequestMovePopup(item) {
         waktu,
         namaLagu,
         pesan,
-        peminta
+        peminta,
+        link: getRequestLink(item)
       });
     };
+}
+
+function showRequestDetailPopup(item) {
+  const old =
+    document.getElementById("requestDetailModal");
+
+  if (old) old.remove();
+
+  const modal =
+    document.createElement("div");
+
+  modal.id = "requestDetailModal";
+  modal.className = "edit-song-modal";
+
+  const role = getActiveRole();
+
+  const waktu =
+    item["Waktu"] || "-";
+
+  const namaLagu =
+    item["Nama Lagu"] || "-";
+
+  const pesan =
+    item["Catatan"] || "-";
+
+  const peminta =
+    item["Peminta"] || "-";
+
+  const actionText =
+    role === "vocal"
+      ? "Lihat Lirik"
+      : "Lihat Chord";
+
+  modal.innerHTML = `
+    <div class="edit-song-overlay"></div>
+
+    <div class="edit-song-box">
+      <div class="edit-song-scroll">
+
+        <h3>Detail Request</h3>
+
+        <div class="request-detail-list song-detail-list">
+
+          <div class="song-detail-two">
+            <div>
+              <span>Waktu</span>
+              <strong>${waktu}</strong>
+            </div>
+
+            <div>
+              <span>Peminta</span>
+              <strong>${peminta}</strong>
+            </div>
+          </div>
+
+          <div>
+            <span>Nama Lagu</span>
+            <strong>${namaLagu}</strong>
+          </div>
+
+          <div>
+            <span>Pesan</span>
+            <strong>${pesan}</strong>
+          </div>
+
+        </div>
+
+        <div class="song-detail-actions two">
+          <button
+            type="button"
+            class="edit-song-cancel"
+            id="requestDetailClose"
+          >
+            Tutup
+          </button>
+
+          <button
+            type="button"
+            class="edit-song-save"
+            id="requestDetailOpen"
+          >
+            ${actionText}
+          </button>
+
+          <button
+            type="button"
+            class="edit-song-save"
+            id="requestDetailComment"
+          >
+            Komentar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  lockBodyScroll();
+
+  document.getElementById("requestDetailClose").onclick = () => {
+    modal.remove();
+    unlockBodyScroll();
+  };
+
+  document.getElementById("requestDetailOpen").onclick = () => {
+    const finalLink =
+    normalizeSongLink(
+      getRequestLink(item)
+    ) ||
+    getDefaultSongLink(namaLagu);
+
+    window.open(finalLink, "_blank");
+
+    modal.remove();
+    unlockBodyScroll();
+  };
 }
 
 function showMoveToSongForm(data) {
@@ -3622,7 +3901,8 @@ function showMoveToSongForm(data) {
               nadaDuet: nadaDuet.value.trim(),
               nadaWanita: nadaWanita.value.trim(),
               tempo: tempoInput.value.trim(),
-              catatan: noteInput.value.trim()
+              catatan: noteInput.value.trim(),
+              link: data.link || ""
             })
           });
 
@@ -3670,162 +3950,56 @@ function showMoveToSongForm(data) {
   }
 
 function renderRequestTable(data) {
-
-  const keys =
-    currentRole === "lainnya"
-      ? [
-          "Waktu",
-          "Nama Lagu"
-        ]
-      : [
-          "Waktu",
-          "Nama Lagu",
-          "Pesan",
-          "Peminta"
-        ];
-
   const requestTable =
     document.querySelector(
       "#requestSection .table-responsive"
     );
-  
-  const savedScrollLeft =
-    0;
 
-requestTable.innerHTML = `
-  <table>
-
-    <thead>
-      <tr id="requestHead"></tr>
-    </thead>
-
-    <tbody id="requestBody"></tbody>
-
-  </table>
-`;
-
-requestHead =
-  document.getElementById(
-    "requestHead"
-  );
-
-requestBody =
-  document.getElementById(
-    "requestBody"
-  );
+  const savedScrollLeft = 0;
 
   if (!data || data.length === 0) {
-
-    requestTable.classList.add(
-      "table-empty"
-    );
+    requestTable.classList.add("table-empty");
 
     requestTable.innerHTML = `
       <div class="empty-state">
-
         Belum ada request
-
       </div>
     `;
 
     document
-      .getElementById(
-        "requestPagination"
-      )
+      .getElementById("requestPagination")
       .classList.add("hidden");
 
     return;
   }
 
-  requestTable.classList.remove(
-    "table-empty"
-  );
-
-  requestHead.innerHTML = "";
-
-  const isDoubleRequest =
-    currentRole === "lainnya" &&
-    window.innerWidth >= 768;
-
-  if (isDoubleRequest) {
-
-    ["Waktu", "Nama Lagu", "Waktu", "Nama Lagu"]
-    .forEach(text => {
-
-      const th =
-        document.createElement("th");
-
-      th.textContent =
-        text;
-
-      requestHead.appendChild(th);
-    });
-
-  } else {
-
-    keys.forEach(key => {
-
-      const th =
-        document.createElement("th");
-
-      th.textContent =
-        key;
-
-      requestHead.appendChild(th);
-    });
-  }
+  requestTable.classList.remove("table-empty");
 
   if (currentRequestKeyword) {
-
     data = data.filter(item => {
-
-      const lagu =
-        item["Nama Lagu"] || "";
-
-      const catatan =
-        item["Catatan"] || "";
-
-      const peminta =
-        item["Peminta"] || "";
+      const lagu = item["Nama Lagu"] || "";
+      const catatan = item["Catatan"] || "";
+      const peminta = item["Peminta"] || "";
 
       return (
-        lagu
-          .toLowerCase()
-          .includes(currentRequestKeyword)
-
-        ||
-
-        catatan
-          .toLowerCase()
-          .includes(currentRequestKeyword)
-
-        ||
-
-        peminta
-          .toLowerCase()
-          .includes(currentRequestKeyword)
+        lagu.toLowerCase().includes(currentRequestKeyword) ||
+        catatan.toLowerCase().includes(currentRequestKeyword) ||
+        peminta.toLowerCase().includes(currentRequestKeyword)
       );
     });
   }
 
   if (data.length === 0) {
-
-    requestTable.classList.add(
-      "table-empty"
-    );
+    requestTable.classList.add("table-empty");
 
     requestTable.innerHTML = `
       <div class="empty-state">
-
         Request tidak ditemukan
-
       </div>
     `;
 
     document
-      .getElementById(
-        "requestPagination"
-      )
+      .getElementById("requestPagination")
       .classList.add("hidden");
 
     return;
@@ -3834,12 +4008,8 @@ requestBody =
   data = [...data];
 
   data.sort((a, b) => {
-
-    const timeA =
-      parseRequestTime(a["Waktu"]);
-
-    const timeB =
-      parseRequestTime(b["Waktu"]);
+    const timeA = parseRequestTime(a["Waktu"]);
+    const timeB = parseRequestTime(b["Waktu"]);
 
     if (requestSortMode === "newest") {
       return timeB - timeA;
@@ -3849,10 +4019,7 @@ requestBody =
   });
 
   const totalRequestPages =
-    Math.ceil(
-      data.length /
-      getRequestItemsPerPage()
-    );
+    Math.ceil(data.length / getRequestItemsPerPage());
 
   currentRequestPage =
     Math.min(
@@ -3861,8 +4028,7 @@ requestBody =
     );
 
   const start =
-    (currentRequestPage - 1)
-    * getRequestItemsPerPage();
+    (currentRequestPage - 1) * getRequestItemsPerPage();
 
   const end =
     start + getRequestItemsPerPage();
@@ -3870,224 +4036,215 @@ requestBody =
   const paginatedData =
     data.slice(start, end);
 
-  if (
-    currentRole === "lainnya" &&
-    window.innerWidth >= 768
-  ) {
+  const isDoubleRequest =
+    window.innerWidth >= 768;
 
-    const half =
-      Math.ceil(paginatedData.length / 2);
+  const table =
+    document.createElement("table");
 
-    const left =
-      paginatedData.slice(0, half);
+  if (isDoubleRequest) {
 
-    const right =
-      paginatedData.slice(half);
+  table.innerHTML = `
+  <thead>
+  <tr>
+  <th>Waktu</th>
+  <th>Nama Lagu</th>
+  <th>Waktu</th>
+  <th>Nama Lagu</th>
+  </tr>
+  </thead>
+  <tbody></tbody>
+  `;
 
-    function makeRequestTable(list) {
+  const tbody =
+  table.querySelector("tbody");
 
-      const table =
-        document.createElement("table");
+  const half =
+  Math.ceil(
+  paginatedData.length / 2
+  );
 
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Waktu</th>
-            <th>Nama Lagu</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
+  for (
+  let i = 0;
+  i < half;
+  i++
+  ){
 
-      const tbody =
-        table.querySelector("tbody");
+  const tr =
+  document.createElement("tr");
 
-      list.forEach(item => {
+  const item1 =
+  paginatedData[i];
 
-        const tr =
-          document.createElement("tr");
+  const item2 =
+  paginatedData[i + half];
 
-        let waktu =
-          item["Waktu"];
+  [item1,item2]
+  .forEach(item=>{
 
-        const tdWaktu =
-          document.createElement("td");
+  const tdWaktu =
+  document.createElement("td");
 
-        tdWaktu.classList.add(
-          "date-cell"
-        );
+  const tdLagu =
+  document.createElement("td");
 
-        tdWaktu.innerHTML =
-          formatRequestTime(waktu);
+  if(item){
 
-        const tdLagu =
-          document.createElement("td");
+  tdWaktu.innerHTML =
+  formatRequestTime(
+  item["Waktu"]
+  );
 
-        tdLagu.textContent =
-          item["Nama Lagu"] || "-";
+  tdLagu.textContent =
+  item["Nama Lagu"]||"-";
 
-        tdLagu.classList.add(
-          "text-left",
-          "song-title-link"
-        );
+  tdLagu.classList.add(
+  "text-left",
+  "song-title-link"
+  );
 
-        tdLagu.addEventListener(
-          "click",
-          () => {
+  const openRequestDetail = () => {
+  const role = getActiveRole();
 
-            const songName =
-              String(item["Nama Lagu"] || "").trim();
-
-            if (!songName || songName === "-") return;
-
-            showSongLinkModal(
-              songName,
-              item["Link"] ||
-              item["LINK"] ||
-              item["link"]
-            );
-          }
-        );
-
-        tr.appendChild(tdWaktu);
-        tr.appendChild(tdLagu);
-        tbody.appendChild(tr);
-      });
-
-      return table;
+    if (role === "playerplus") {
+      showRequestMovePopup(item);
+      return;
     }
 
-    requestTable.innerHTML = "";
-
-    const doubleWrap =
-      document.createElement("div");
-
-    doubleWrap.className =
-      "request-double";
-
-    const leftBox =
-      document.createElement("div");
-
-    const rightBox =
-      document.createElement("div");
-
-    leftBox.appendChild(
-      makeRequestTable(left)
-    );
-
-    rightBox.appendChild(
-      makeRequestTable(right)
-    );
-
-    doubleWrap.appendChild(leftBox);
-
-    if (right.length > 0) {
-      doubleWrap.appendChild(rightBox);
-    } else {
-      doubleWrap.classList.add("single-request-table");
+    if (
+      role === "player" ||
+      role === "vocal"
+    ) {
+      showRequestDetailPopup(item);
+      return;
     }
 
-    requestTable.appendChild(doubleWrap);
+    showSongLinkModal(
+      item["Nama Lagu"],
+      getRequestLink(item)
+    );
+  };
 
-    renderRequestPagination(data.length);
+  tdWaktu.onclick = openRequestDetail;
+  tdLagu.onclick = openRequestDetail;
 
-    return;
+  tdWaktu.style.cursor = "pointer";
+  tdLagu.style.cursor = "pointer";
 
-  } else {
+  }else{
 
-    paginatedData.forEach(item => {
-
-      const tr =
-        document.createElement("tr");
-
-      keys.forEach(key => {
-
-        const td =
-          document.createElement("td");
-
-        let value =
-          item[
-            key === "Pesan"
-              ? "Catatan"
-              : key
-          ] || "-";
-
-        if (key === "Waktu") {
-
-          td.innerHTML =
-            formatRequestTime(value);
-
-        } else {
-
-          td.textContent =
-            value;
-        }
-
-        if (key === "Pesan") {
-
-          td.classList.add(
-            "note-cell"
-          );
-
-          if (value === "-") {
-
-            td.classList.add(
-              "note-empty"
-            );
-          }
-        }
-
-        if (key === "Nama Lagu") {
-
-          td.classList.add("text-left");
-
-          if (getActiveRole() !== "playerplus") {
-            td.classList.add("song-title-link");
-
-            td.addEventListener("click", () => {
-              const songName =
-                String(value || "").trim();
-
-              if (!songName || songName === "-")
-                return;
-
-              showSongLinkModal(
-                songName,
-                item["Link"] ||
-                item["LINK"] ||
-                item["link"]
-              );
-            });
-          }
-        }
-
-        tr.appendChild(td);
-
-      });
-
-      if (getActiveRole() === "playerplus") {
-        tr.classList.add("request-playerplus-row");
-
-        tr.addEventListener("click", () => {
-          showRequestMovePopup(item);
-        });
-      }
-
-      requestBody.appendChild(
-        tr
-      );
-
-    });
+  tdWaktu.textContent="";
+  tdLagu.textContent="";
 
   }
 
-  renderRequestPagination(
-    data.length
+  tr.appendChild(
+  tdWaktu
   );
 
+  tr.appendChild(
+  tdLagu
+  );
+
+  });
+
+  tbody.appendChild(
+  tr
+  );
+
+  }
+
+  }else{
+
+  table.innerHTML=`
+  <thead>
+  <tr>
+  <th>Waktu</th>
+  <th>Nama Lagu</th>
+  </tr>
+  </thead>
+  <tbody></tbody>
+  `;
+
+  const tbody =
+  table.querySelector("tbody");
+
+  paginatedData.forEach(
+  item=>{
+
+  const tr =
+  document.createElement("tr");
+
+  const tdWaktu =
+  document.createElement("td");
+
+  tdWaktu.innerHTML=
+  formatRequestTime(
+  item["Waktu"]
+  );
+
+  const tdLagu =
+  document.createElement("td");
+
+  tdLagu.textContent=
+  item["Nama Lagu"]||"-";
+
+  tdLagu.classList.add(
+  "text-left",
+  "song-title-link"
+  );
+
+  const openRequestDetail = () => {
+    const role = getActiveRole();
+
+    if (role === "playerplus") {
+      showRequestMovePopup(item);
+      return;
+    }
+
+    if (
+      role === "player" ||
+      role === "vocal"
+    ) {
+      showRequestDetailPopup(item);
+      return;
+    }
+
+    showSongLinkModal(
+      item["Nama Lagu"],
+      getRequestLink(item)
+    );
+  };
+
+  tdWaktu.onclick = openRequestDetail;
+  tdLagu.onclick = openRequestDetail;
+
+  tdWaktu.style.cursor = "pointer";
+  tdLagu.style.cursor = "pointer";
+
+  tr.appendChild(
+  tdWaktu
+  );
+
+  tr.appendChild(
+  tdLagu
+  );
+
+  tbody.appendChild(
+  tr
+  );
+
+  });
+
+  }
+
+  requestTable.innerHTML = "";
+  requestTable.appendChild(table);
+
+  renderRequestPagination(data.length);
+
   setTimeout(() => {
-    requestTable.scrollLeft =
-      savedScrollLeft;
+    requestTable.scrollLeft = savedScrollLeft;
   }, 0);
 }
 
@@ -5236,6 +5393,10 @@ if (logoutBtn) {
       );
 
       localStorage.removeItem(
+        "aqila_login_time"
+      );
+
+      localStorage.removeItem(
         "aqila_yt_search_choice"
       );
 
@@ -5319,10 +5480,36 @@ window.addEventListener(
         "aqila_role"
       );
 
-      const lastActive =
+    const lastActive =
       localStorage.getItem(
         "aqila_last_active"
       );
+
+    const loginTime =
+      localStorage.getItem(
+        "aqila_login_time"
+      );
+
+    if (
+      role &&
+      loginTime &&
+      Date.now() - Number(loginTime) >= MAX_SESSION_DURATION
+    ) {
+      localStorage.removeItem("aqila_role");
+      localStorage.removeItem("aqila_last_active");
+      localStorage.removeItem("aqila_login_time");
+      localStorage.removeItem("aqila_yt_search_choice");
+      localStorage.removeItem("aqila_tab");
+      sessionStorage.removeItem("aqila_token");
+
+      await appAlert(
+        "Sesi maksimal 8 jam telah berakhir",
+        "warning"
+      );
+
+      location.reload();
+      return;
+    }
 
     if (
       role &&
@@ -5340,6 +5527,10 @@ window.addEventListener(
 
         localStorage.removeItem(
           "aqila_last_active"
+        );
+
+        localStorage.removeItem(
+          "aqila_login_time"
         );
 
         localStorage.removeItem(
@@ -5604,6 +5795,10 @@ if (
 
       if (!result.success) {
 
+        localStorage.removeItem(
+          "aqila_last_request"
+        );
+
         await appAlert(
           result.message,
           "warning"
@@ -5611,7 +5806,6 @@ if (
 
         return;
       }
-
       localStorage.setItem(
         "aqila_last_request",
         Date.now()
@@ -6455,6 +6649,43 @@ updateRequestCooldown();
 
 function resetSessionTimer() {
 
+  const role =
+    localStorage.getItem(
+      "aqila_role"
+    );
+
+  if (!role) return;
+
+  const loginTime =
+    Number(
+      localStorage.getItem(
+        "aqila_login_time"
+      ) || Date.now()
+    );
+
+  if (
+    Date.now() - loginTime >=
+    MAX_SESSION_DURATION
+  ) {
+    appAlert(
+      "Sesi maksimal 8 jam telah berakhir, silakan login kembali",
+      "warning"
+    ).then(() => {
+
+      localStorage.removeItem("aqila_role");
+      localStorage.removeItem("aqila_last_active");
+      localStorage.removeItem("aqila_login_time");
+      localStorage.removeItem("aqila_yt_search_choice");
+      localStorage.removeItem("aqila_tab");
+
+      sessionStorage.removeItem("aqila_token");
+
+      location.reload();
+    });
+
+    return;
+  }
+
   localStorage.setItem(
     "aqila_last_active",
     Date.now()
@@ -6462,12 +6693,9 @@ function resetSessionTimer() {
 
   clearTimeout(sessionTimer);
 
-  const role =
-    localStorage.getItem(
-      "aqila_role"
-    );
-
-  if (!role) return;
+  const remainingMax =
+    MAX_SESSION_DURATION -
+    (Date.now() - loginTime);
 
   sessionTimer =
     setTimeout(async () => {
@@ -6477,25 +6705,17 @@ function resetSessionTimer() {
         "warning"
       );
 
-      localStorage.removeItem(
-        "aqila_role"
-      );
+      localStorage.removeItem("aqila_role");
+      localStorage.removeItem("aqila_last_active");
+      localStorage.removeItem("aqila_login_time");
+      localStorage.removeItem("aqila_yt_search_choice");
+      localStorage.removeItem("aqila_tab");
 
-      localStorage.removeItem(
-        "aqila_last_active"
-      );
-
-      localStorage.removeItem(
-        "aqila_yt_search_choice"
-      );
-
-      localStorage.removeItem(
-        "aqila_tab"
-      );
+      sessionStorage.removeItem("aqila_token");
 
       location.reload();
 
-    }, SESSION_TIMEOUT);
+    }, Math.min(SESSION_TIMEOUT, remainingMax));
 }
 
 function initSessionListener() {
