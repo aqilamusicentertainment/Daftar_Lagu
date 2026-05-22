@@ -507,7 +507,9 @@ function showPlayerPlusPinPopup() {
     okBtn.disabled = true;
 
     inputs.forEach(box => {
+
       box.addEventListener("input", () => {
+
         const pin =
           [...inputs]
             .map(i => i.dataset.value || "")
@@ -516,6 +518,23 @@ function showPlayerPlusPinPopup() {
         okBtn.disabled =
           pin.length !== 4;
       });
+
+      box.addEventListener("keydown", (e) => {
+
+        if (e.key === "Enter") {
+
+          const pin =
+            [...inputs]
+              .map(i => i.dataset.value || "")
+              .join("");
+
+          if (pin.length === 4) {
+            okBtn.click(); // otomatis tekan tombol Masuk
+          }
+        }
+
+      });
+
     });
 
     okBtn.onclick = () => {
@@ -688,9 +707,29 @@ requestFilter.addEventListener(
   "click",
   (e) => {
     e.stopPropagation();
-    requestFilter.classList.toggle(
-      "active"
-    );
+
+    const isOpen =
+      requestFilter.classList.contains("active");
+
+    requestFilter.classList.toggle("active");
+
+    if (!isOpen) {
+
+      requestAnimationFrame(() => {
+
+        const activeOption =
+          requestFilter.querySelector(
+            ".filter-option.active"
+          );
+
+        activeOption?.scrollIntoView({
+          block: "center",
+          behavior: "instant"
+        });
+
+      });
+
+    }
   }
 );
 
@@ -704,9 +743,29 @@ if (songCategoryFilter) {
     "click",
     (e) => {
       e.stopPropagation();
-      songCategoryFilter.classList.toggle(
-        "active"
-      );
+
+      const isOpen =
+        songCategoryFilter.classList.contains("active");
+
+      songCategoryFilter.classList.toggle("active");
+
+      if (!isOpen) {
+
+        requestAnimationFrame(() => {
+
+          const activeOption =
+            songCategoryFilter.querySelector(
+              ".filter-option.active"
+            );
+
+          activeOption?.scrollIntoView({
+            block: "center",
+            behavior: "instant"
+          });
+
+        });
+
+      }
     }
   );
 
@@ -880,58 +939,28 @@ function updateNotifSlider() {
 }
 
 function setLoginLoading(isLoading) {
+  const roleInput = document.getElementById("role");
+  const nameInput = document.getElementById("nameInput");
+  const passwordInput = document.getElementById("password");
+  const rememberMe = document.getElementById("rememberMe");
+  const togglePassword = document.getElementById("togglePassword");
+  const submitBtn = document.getElementById("loginBtn");
 
-  const roleInput =
-    document.getElementById("role");
+  loginForm.classList.toggle("form-loading", isLoading);
 
-  const passwordInput =
-    document.getElementById("password");
+  roleInput.disabled = isLoading;
+  nameInput.disabled = isLoading;
+  passwordInput.disabled = isLoading;
+  rememberMe.disabled = isLoading;
+  togglePassword.disabled = isLoading;
+  submitBtn.disabled = isLoading;
 
-  const submitBtn =
-      document.getElementById(
-    "loginBtn"
-  );
+  customSelect.style.pointerEvents = isLoading ? "none" : "";
+  customSelect.style.opacity = isLoading ? ".6" : "";
 
-  if (isLoading) {
-
-    loginForm.classList.add(
-      "form-loading"
-    );
-
-    submitBtn.disabled = true;
-
-    passwordInput.disabled = true;
-
-    customSelect.style.pointerEvents =
-      "none";
-
-    customSelect.style.opacity =
-      ".6";
-
-    submitBtn.innerHTML = `
-      <i class="ri-loader-4-line rotating"></i>
-      Memeriksa...
-    `;
-
-  } else {
-
-    loginForm.classList.remove(
-      "form-loading"
-    );
-
-    submitBtn.disabled = false;
-
-    passwordInput.disabled = false;
-
-    customSelect.style.pointerEvents =
-      "";
-
-    customSelect.style.opacity =
-      "";
-
-    submitBtn.innerHTML =
-      "Masuk";
-  }
+  submitBtn.innerHTML = isLoading
+    ? `<i class="ri-loader-4-line rotating"></i> Memeriksa...`
+    : "Masuk";
 }
 
 function startNotifAutoplay() {
@@ -1331,10 +1360,25 @@ function applyRoleVisibility(role) {
   const isGeneral =
     role === "lainnya";
 
+  const isPlayerPlus =
+    role === "playerplus";
+
+  const requestFormCard =
+    document.querySelector(
+      "#requestSection .request-form-card"
+    );
+
   const requestListCard =
     document.getElementById(
       "requestListCard"
     );
+
+  if (requestFormCard) {
+    requestFormCard.classList.toggle(
+      "hidden",
+      isPlayerPlus
+    );
+  }
 
   if (requestListCard) {
     requestListCard.classList.remove(
@@ -2397,11 +2441,24 @@ function showEditSongForm(item) {
   };
 
   categoryMenu.querySelectorAll("button").forEach(btn => {
+    btn.classList.toggle(
+      "active",
+      btn.dataset.value === categoryInput.dataset.value
+    );
+  });
+
+  categoryMenu.querySelectorAll("button").forEach(btn => {
     btn.onclick = (e) => {
       e.stopPropagation();
 
       categoryInput.dataset.value =
         btn.dataset.value;
+
+      categoryMenu.querySelectorAll("button").forEach(item => {
+        item.classList.remove("active");
+      });
+
+      btn.classList.add("active");
 
       categoryText.innerText =
         btn.dataset.value;
@@ -3806,6 +3863,13 @@ function showMoveToSongForm(data) {
         categoryInput.dataset.value =
           btn.dataset.value;
 
+        categoryMenu.querySelectorAll("button").forEach(item => {
+          item.classList.toggle(
+            "active",
+            item.dataset.value === categoryInput.dataset.value
+          );
+        });
+
         categoryText.innerText =
           btn.dataset.value;
 
@@ -4122,10 +4186,16 @@ function renderRequestTable(data) {
     data.slice(start, end);
 
   const isDoubleRequest =
-    window.innerWidth >= 768;
+    window.innerWidth >= 768 &&
+    paginatedData.length > 1;
 
   const table =
     document.createElement("table");
+
+  requestTable.classList.toggle(
+    "single-request-table",
+    paginatedData.length === 1
+  );
 
   if (isDoubleRequest) {
 
