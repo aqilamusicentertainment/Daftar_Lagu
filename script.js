@@ -2,7 +2,7 @@ const APP_VERSION =
   "1.1.3";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzymZrpNF4UG6490DdCbM0bnqg86HCJF7LLaOvOZSSithJg__VkPNtzXkj4bLd3vRU/exec";
+  "https://script.google.com/macros/s/AKfycbzXgKOnSDoYRCuKoKNS6rzGlxhCqPzu04XkS-H7keQAxdovGIHgDbT1e3Es2Uxqr1Q/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
