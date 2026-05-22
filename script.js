@@ -5490,6 +5490,13 @@ window.addEventListener(
         "aqila_login_time"
       );
 
+      if (role && !loginTime) {
+        localStorage.setItem(
+          "aqila_login_time",
+          Date.now()
+        );
+      }
+
     if (
       role &&
       loginTime &&
