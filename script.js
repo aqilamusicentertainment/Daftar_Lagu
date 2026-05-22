@@ -2,7 +2,7 @@ const APP_VERSION =
   "1.1.3";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzDJNbQ-Tc7K7wOHTnZRWg7szeWZkDx51oa9zJ0zj5FwDspOA5wMVbREySj2IlMK3bb/exec";
+  "https://script.google.com/macros/s/AKfycbzymZrpNF4UG6490DdCbM0bnqg86HCJF7LLaOvOZSSithJg__VkPNtzXkj4bLd3vRU/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -1465,14 +1465,8 @@ roleBadge.onclick = async () => {
     setRoleSwitchLoading(true);
 
     roleBadge.innerHTML = `
-      <i class="
-        ri-loader-4-line
-        rotating
-      "></i>
-
-      <span>
-        Memuat
-      </span>
+      <i class="ri-loader-4-line rotating"></i>
+      <span>Memuat</span>
     `;
 
     roleBadge.classList.add(
@@ -1482,30 +1476,62 @@ roleBadge.onclick = async () => {
     roleBadge.style.pointerEvents =
       "none";
 
-    await new Promise(
-      r =>
-        setTimeout(
-          r,
-          2000
-        )
-    );
+    try {
 
-    currentRole =
-      "player";
+      const response =
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "setPlayerMode",
+            token: sessionStorage.getItem("aqila_token")
+          })
+        });
 
-    localStorage.setItem(
-      "aqila_role",
-      "player"
-    );
+      const result =
+        await response.json();
 
-    showApp("player");
+      if (!result.success) {
+        await forceLogoutByAuthChange();
+        return;
+      }
 
-    roleBadge.classList.remove(
-      "badge-loading"
-    );
+      await new Promise(
+        r => setTimeout(r, 1000)
+      );
 
-    roleBadge.style.pointerEvents =
-      "";
+      currentRole =
+        "player";
+
+      localStorage.setItem(
+        "aqila_role",
+        "player"
+      );
+
+      roleBadge.classList.remove(
+        "badge-loading"
+      );
+
+      roleBadge.style.pointerEvents =
+        "";
+
+      showApp("player");
+
+    } catch (error) {
+
+      console.error(error);
+
+      await appAlert(
+        "Gagal kembali ke Player",
+        "error"
+      );
+
+      roleBadge.classList.remove(
+        "badge-loading"
+      );
+
+      roleBadge.style.pointerEvents =
+        "";
+    }
 
     setRoleSwitchLoading(false);
 
