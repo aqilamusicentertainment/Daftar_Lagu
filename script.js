@@ -5510,7 +5510,7 @@ window.addEventListener(
       sessionStorage.removeItem("aqila_token");
 
       await appAlert(
-        "Sesi maksimal 8 jam telah berakhir",
+        "Anda aktif terlalu lama, silakan login kembali.",
         "warning"
       );
 
@@ -5545,7 +5545,7 @@ window.addEventListener(
         );
 
         await appAlert(
-          "Sesi login telah berakhir",
+          "Sesi berakhir, silakan login kembali.",
           "warning"
         );
 
@@ -6675,7 +6675,7 @@ function resetSessionTimer() {
     MAX_SESSION_DURATION
   ) {
     appAlert(
-      "Sesi maksimal 8 jam telah berakhir, silakan login kembali",
+      "Anda aktif terlalu lama, silakan login kembali",
       "warning"
     ).then(() => {
 
