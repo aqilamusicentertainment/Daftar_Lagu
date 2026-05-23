@@ -2902,9 +2902,12 @@ body.dark .google-search-box {
   font-weight: 900;
 }
 
-.remember-box label:hover {
-
+body.dark .remember-box label:hover {
   color: #fff;
+}
+
+body:not(.dark) .remember-box label:hover {
+  color: #222;
 }
 
 body.print-mode .pagination {

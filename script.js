@@ -4642,7 +4642,7 @@ function renderSongPagination(
       card.getBoundingClientRect()
         .top +
       window.scrollY -
-      76;
+      85;
 
     window.scrollTo({
       top: y,
@@ -4838,7 +4838,7 @@ function renderRequestPagination(totalItems) {
       document.getElementById(
         "requestSection"
       ),
-      -25
+      -39
     );
   };
 
@@ -4895,7 +4895,7 @@ if (totalPages > 1) {
       document.getElementById(
         "requestSection"
       ),
-      -25
+      -39
     );
   };
 
@@ -4925,7 +4925,7 @@ if (totalPages > 1) {
         document.getElementById(
           "requestSection"
         ),
-        -25
+        -39
       );
     };
 
