@@ -3769,7 +3769,7 @@ body.dark .welcome-song-card p {
   border: none;
   background: transparent;
 
-  color: rgba(255,255,255,.65);
+  color: var(--text-color);
 
   font-size: 20px;
 
@@ -3778,6 +3778,10 @@ body.dark .welcome-song-card p {
   z-index: 10;
 
   transition: .2s ease;
+}
+
+body.dark .close-welcome-btn {
+  color: rgba(255,255,255,.75);
 }
 
 .close-welcome-btn:hover {
