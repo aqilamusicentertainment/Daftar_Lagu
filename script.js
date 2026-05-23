@@ -2,7 +2,7 @@ const APP_VERSION =
   "1.1.5";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxHXQUic6pOj1qNJEIv6_NsC0rB6I8OR-WGwJATQajBn2BOnZfP40aqhR87hjR_-Rgw/exec";
+  "https://script.google.com/macros/s/AKfycbxmSgDed71Btl6NeBRpzg0s0CUJyiZ65hPeDBOdavJRZ59ALkYOmmcGur0VPQ0_Qmoz/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -291,51 +291,6 @@ async function sendActivityLog(action, detail = "") {
   } catch (error) {
     console.warn("Gagal kirim log:", action, error);
   }
-}
-
-async function forceLogoutByAuthChange() {
-
-  if (isForceLoggingOut)
-    return;
-
-  isForceLoggingOut =
-    true;
-
-  await sendActivityLog(
-    "sessionExpired",
-    "Auth berubah / password diperbarui"
-  );
-
-  await appAlert(
-    "Sesi berakhir karena ada pembaruan. Silakan login kembali.",
-    "warning"
-  );
-
-  localStorage.removeItem(
-    "aqila_role"
-  );
-
-  localStorage.removeItem(
-    "aqila_last_active"
-  );
-
-  localStorage.removeItem(
-    "aqila_login_time"
-  );
-
-  localStorage.removeItem(
-    "aqila_yt_search_choice"
-  );
-
-  localStorage.removeItem(
-    "aqila_tab"
-  );
-
-  sessionStorage.removeItem(
-    "aqila_token"
-  );
-
-  location.reload();
 }
 
 function appAlert(
@@ -1662,13 +1617,10 @@ roleBadge.onclick = async () => {
         await response.json();
 
       if (!result.success) {
-
-        if (
-          result.message ===
-          "Unauthorized"
-        ) {
-          await forceLogoutByAuthChange();
-        }
+        await appAlert(
+          result.message || "Gagal kembali ke Player",
+          "error"
+        );
 
         return;
       }
@@ -1902,7 +1854,19 @@ async function loadSongData(role) {
         return;
       }
 
-      await forceLogoutByAuthChange();
+      await appAlert(
+        "Sesi berakhir, silakan login kembali.",
+        "warning"
+      );
+
+      localStorage.removeItem("aqila_role");
+      localStorage.removeItem("aqila_last_active");
+      localStorage.removeItem("aqila_login_time");
+      localStorage.removeItem("aqila_yt_search_choice");
+      localStorage.removeItem("aqila_tab");
+      sessionStorage.removeItem("aqila_token");
+
+      location.reload();
       return;
     }
 
@@ -3450,7 +3414,19 @@ if (!requestLoaded) {
         return;
       }
 
-      await forceLogoutByAuthChange();
+      await appAlert(
+        "Sesi berakhir, silakan login kembali.",
+        "warning"
+      );
+
+      localStorage.removeItem("aqila_role");
+      localStorage.removeItem("aqila_last_active");
+      localStorage.removeItem("aqila_login_time");
+      localStorage.removeItem("aqila_yt_search_choice");
+      localStorage.removeItem("aqila_tab");
+      sessionStorage.removeItem("aqila_token");
+
+      location.reload();
       return;
     }
 
