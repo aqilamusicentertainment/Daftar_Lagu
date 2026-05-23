@@ -6314,11 +6314,20 @@ window.addEventListener(
         "aqila_theme"
       );
 
-    if (savedTheme === "dark") {
+    if (
+
+      savedTheme === "dark"
+
+      ||
+
+      !savedTheme
+
+    ) {
 
       document.body.classList.add(
         "dark"
       );
+
     }
 
     updateThemeIcon();
