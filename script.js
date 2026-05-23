@@ -1195,7 +1195,8 @@ loginForm.addEventListener(
             body: JSON.stringify({
               action: "login",
               role,
-              password
+              password,
+              name: userName
             })
           }
         );
