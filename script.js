@@ -2,7 +2,7 @@ const APP_VERSION =
   "1.1.6";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzA-SecVMOx5n5O_XjDFQRluY4F72ZHdhaSP6R4g1thyDAiK_HsGK5iG7EFipHY5OPv/exec";
+  "https://script.google.com/macros/s/AKfycbyjVoHLZpHoyhXS_G3eFc7SPAzV0f2qAAV_DDWkrqyrD2znF9ySOSaJ4PD9aITaoE3p/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -1980,6 +1980,20 @@ function findSongLinkByName(songName) {
   );
 }
 
+function getSongLink(item) {
+  return (
+    item["Link"] ||
+    item["LINK"] ||
+    item["link"] ||
+    item["URL"] ||
+    item["Url"] ||
+    item["url"] ||
+    item["Lirik"] ||
+    item["Chord"] ||
+    ""
+  );
+}
+
 function getRequestLink(item) {
   return (
     item["Link"] ||
@@ -2346,9 +2360,7 @@ function showSongDetailPopup(item) {
     document.getElementById("songDetailChord").onclick = () => {
       const finalLink =
         normalizeSongLink(
-          item["Link"] ||
-          item["LINK"] ||
-          item["link"]
+          getSongLink(item)
         ) ||
         getDefaultSongLink(namaLagu);
 
@@ -3062,9 +3074,7 @@ function renderTable(data, role) {
 
                 showSongLinkModal(
                   value,
-                  item["Link"] ||
-                  item["LINK"] ||
-                  item["link"]
+                  getSongLink(item)
                 );
               }
             );
@@ -3196,10 +3206,8 @@ function renderTable(data, role) {
               ) return;
 
               showSongLinkModal(
-                songName,
-                item["Link"] ||
-                item["LINK"] ||
-                item["link"]
+                value,
+                getSongLink(item)
               );
             }
           );
