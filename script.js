@@ -1,8 +1,8 @@
 const APP_VERSION =
-  "1.1.3";
+  "1.1.4";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbwyUpswxgSSgK3CKILTXqlnoWBGQjqV305fpPge1RlRFzIoctT8kQH1okh-Qwvi_SbM/exec";
+  "https://script.google.com/macros/s/AKfycbxpk58ZceEHuKwrVjigDMJ6d3r43_U7AaPGlhd0vNzhOWD2D2xXiZfg4w8ABSvAF_k1/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -267,6 +267,32 @@ function appPopup({
   });
 }
 
+function getLogName() {
+  return localStorage.getItem("aqila_name") || "-";
+}
+
+function getLogRole() {
+  return localStorage.getItem("aqila_role") || currentRole || "-";
+}
+
+async function sendActivityLog(action, detail = "") {
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      keepalive: true,
+      body: JSON.stringify({
+        action,
+        token: sessionStorage.getItem("aqila_token"),
+        name: getLogName(),
+        role: getLogRole(),
+        detail
+      })
+    });
+  } catch (error) {
+    console.warn("Gagal kirim log:", action, error);
+  }
+}
+
 async function forceLogoutByAuthChange() {
 
   if (isForceLoggingOut)
@@ -274,6 +300,11 @@ async function forceLogoutByAuthChange() {
 
   isForceLoggingOut =
     true;
+
+  await sendActivityLog(
+    "sessionExpired",
+    "Auth berubah / password diperbarui"
+  );
 
   await appAlert(
     "Sesi berakhir karena ada pembaruan. Silakan login kembali.",
@@ -1207,21 +1238,23 @@ loginForm.addEventListener(
         userName
       );
 
-      await appAlert(
-        "Login berhasil 🔥",
-        "success"
+      localStorage.setItem(
+        "aqila_tab",
+        "dashboardSection"
       );
 
-      setTimeout(() => {
+      showApp(role, false);
 
-        localStorage.setItem(
-          "aqila_tab",
-          "dashboardSection"
+      setTimeout(async () => {
+
+        await appAlert(
+          "Login berhasil 🔥",
+          "success"
         );
 
-        showApp(role, true);
+        showWelcomeSongCard();
 
-      }, 300);
+      }, 400);
 
     } catch (error) {
 
@@ -1527,7 +1560,8 @@ roleBadge.onclick = async () => {
           method: "POST",
           body: JSON.stringify({
             action: "setPlayerMode",
-            token: sessionStorage.getItem("aqila_token")
+            token: sessionStorage.getItem("aqila_token"),
+            name: getLogName()
           })
         });
 
@@ -1535,7 +1569,14 @@ roleBadge.onclick = async () => {
         await response.json();
 
       if (!result.success) {
-        await forceLogoutByAuthChange();
+
+        if (
+          result.message ===
+          "Unauthorized"
+        ) {
+          await forceLogoutByAuthChange();
+        }
+
         return;
       }
 
@@ -1610,6 +1651,7 @@ roleBadge.onclick = async () => {
         body: JSON.stringify({
           action: "verifyPlayerPlusPin",
           token: sessionStorage.getItem("aqila_token"),
+          name: getLogName(),
           pin
         })
       });
@@ -1746,6 +1788,15 @@ async function loadSongData(role) {
       data.success === false &&
       data.message === "Unauthorized"
     ) {
+
+      if (isSwitchingRole) {
+        setTimeout(() => {
+          loadSongData(getActiveRole());
+        }, 800);
+
+        return;
+      }
+
       await forceLogoutByAuthChange();
       return;
     }
@@ -2621,6 +2672,7 @@ saveBtn.disabled = true;
           body: JSON.stringify({
             action: "updateSong",
             token: sessionStorage.getItem("aqila_token"),
+            name: getLogName(),
             songName: originalSongName,
             field,
             value: newValue
@@ -2680,6 +2732,7 @@ async function deleteSong(item, modal) {
     body: JSON.stringify({
       action: "deleteSong",
       token: sessionStorage.getItem("aqila_token"),
+      name: getLogName(),
       songName
     })
   });
@@ -3283,6 +3336,15 @@ if (!requestLoaded) {
       data.success === false &&
       data.message === "Unauthorized"
     ) {
+
+      if (isSwitchingRole) {
+        setTimeout(() => {
+          loadRequestData();
+        }, 800);
+
+        return;
+      }
+
       await forceLogoutByAuthChange();
       return;
     }
@@ -4038,6 +4100,7 @@ function showMoveToSongForm(data) {
             body: JSON.stringify({
               action: "moveRequestToSong",
               token: sessionStorage.getItem("aqila_token"),
+              name: getLogName(),
 
               requestNamaLagu: data.namaLagu,
               requestWaktu: data.waktu,
@@ -5531,6 +5594,11 @@ if (logoutBtn) {
       if (!confirmLogout)
         return;
 
+      await sendActivityLog(
+        "logout",
+        "Logout manual"
+      );
+
       localStorage.removeItem(
         "aqila_role"
       );
@@ -5565,6 +5633,11 @@ if (logoutBtn) {
         "aqila_logged_out",
         "true"
       );
+      
+      localStorage.setItem(
+        "aqila_logout_success",
+        "true"
+      );
 
       location.reload();
     }
@@ -5574,6 +5647,26 @@ if (logoutBtn) {
 window.addEventListener(
   "load",
   async () => {
+
+    if (
+      localStorage.getItem(
+        "aqila_logout_success"
+      ) === "true"
+    ) {
+
+      localStorage.removeItem(
+        "aqila_logout_success"
+      );
+
+      setTimeout(async () => {
+
+        await appAlert(
+          "Logout berhasil 👋",
+          "success"
+        );
+
+      }, 400);
+    }
 
     if (
 
@@ -5626,6 +5719,13 @@ window.addEventListener(
             "Umum"
 
         }[savedRole];
+
+        options.forEach(option => {
+          option.classList.toggle(
+            "active",
+            option.dataset.value === savedRole
+          );
+        });
       }
 
     }
@@ -5657,6 +5757,11 @@ window.addEventListener(
       loginTime &&
       Date.now() - Number(loginTime) >= MAX_SESSION_DURATION
     ) {
+      await sendActivityLog(
+        "sessionExpired",
+        "Maksimal sesi 8 jam"
+      );
+
       localStorage.removeItem("aqila_role");
       localStorage.removeItem("aqila_last_active");
       localStorage.removeItem("aqila_login_time");
@@ -5682,6 +5787,11 @@ window.addEventListener(
         Date.now() - Number(lastActive);
 
       if (diff >= SESSION_TIMEOUT) {
+
+        await sendActivityLog(
+          "sessionExpired",
+          "Idle timeout"
+        );
 
         localStorage.removeItem(
           "aqila_role"
@@ -6191,6 +6301,12 @@ options.forEach(option => {
 
       roleInput.value =
         value;
+
+      options.forEach(item => {
+        item.classList.remove("active");
+      });
+
+      option.classList.add("active");
 
       customSelect.classList.add(
         "closing"
@@ -6784,6 +6900,8 @@ setInterval(
 
 setInterval(() => {
 
+  if (isSwitchingRole) return;
+
   const role =
     localStorage.getItem(
       "aqila_role"
@@ -6834,10 +6952,15 @@ function resetSessionTimer() {
     Date.now() - loginTime >=
     MAX_SESSION_DURATION
   ) {
-    appAlert(
-      "Anda aktif terlalu lama, silakan login kembali",
-      "warning"
-    ).then(() => {
+    sendActivityLog(
+      "sessionExpired",
+      "Maksimal sesi 8 jam"
+    ).finally(() => {
+
+      appAlert(
+        "Anda aktif terlalu lama, silakan login kembali",
+        "warning"
+      ).then(() => {
 
       localStorage.removeItem("aqila_role");
       localStorage.removeItem("aqila_last_active");
@@ -6849,8 +6972,9 @@ function resetSessionTimer() {
 
       location.reload();
     });
+  });
 
-    return;
+  return;
   }
 
   localStorage.setItem(
@@ -6866,6 +6990,11 @@ function resetSessionTimer() {
 
   sessionTimer =
     setTimeout(async () => {
+
+      await sendActivityLog(
+        "sessionExpired",
+        "Idle timeout"
+      );
 
       await appAlert(
         "Sesi berakhir, silakan login kembali",
@@ -7386,5 +7515,37 @@ function showWelcomeSongCard() {
 
     }, 600);
 
-  }, 10000);
+  }, 30000);
 }
+
+document
+.getElementById(
+  "closeWelcomeBtn"
+)
+?.addEventListener(
+  "click",
+  () => {
+
+    const welcomeCard =
+      document.getElementById(
+        "welcomeSongCard"
+      );
+
+    welcomeCard.classList.add(
+      "hide-out"
+    );
+
+    setTimeout(() => {
+
+      welcomeCard.classList.add(
+        "hidden"
+      );
+
+      welcomeCard.classList.remove(
+        "hide-out"
+      );
+
+    }, 300);
+
+  }
+);
