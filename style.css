@@ -2903,11 +2903,11 @@ body.dark .google-search-box {
 }
 
 body.dark .remember-box label:hover {
-  color: #fff;
+  color: #c5c5c5;
 }
 
 body:not(.dark) .remember-box label:hover {
-  color: #222;
+  color: #5e5e5e;
 }
 
 body.print-mode .pagination {

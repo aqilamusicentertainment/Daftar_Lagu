@@ -1,8 +1,8 @@
 const APP_VERSION =
-  "1.1.5";
+  "1.1.6";
 
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxmSgDed71Btl6NeBRpzg0s0CUJyiZ65hPeDBOdavJRZ59ALkYOmmcGur0VPQ0_Qmoz/exec";
+  "https://script.google.com/macros/s/AKfycbwmT4Y-pVn-f1PezYpRUyoSFBgoA0whhZFKWC6JyFS2VvQDiGCD8b-8jBT8nNSabCo/exec";
 
 let currentRequestPage = 1;
 let currentSongPage = {};
@@ -1344,7 +1344,8 @@ async function loadNotification() {
             controller.signal,
 
           body: JSON.stringify({
-            action: "notification"
+            action: "notification",
+            token: sessionStorage.getItem("aqila_token")
           })
         }
       );
