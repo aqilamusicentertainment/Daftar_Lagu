@@ -1,5 +1,5 @@
 const APP_VERSION =
-  "1.1.4";
+  "1.1.5";
 
 const SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbxpk58ZceEHuKwrVjigDMJ6d3r43_U7AaPGlhd0vNzhOWD2D2xXiZfg4w8ABSvAF_k1/exec";
@@ -374,6 +374,95 @@ function appConfirm(
     cancelText,
     showCancel: true
   });
+}
+
+function showLogoutLoading() {
+
+  const old =
+    document.getElementById(
+      "logoutLoadingModal"
+    );
+
+  if (old)
+    old.remove();
+
+  const modal =
+    document.createElement(
+      "div"
+    );
+
+  modal.id =
+    "logoutLoadingModal";
+
+  modal.className =
+    "app-popup-modal info";
+
+  modal.innerHTML = `
+
+    <div class="app-popup-overlay"></div>
+
+    <div class="app-popup-box">
+
+      <div class="app-popup-icon">
+
+        <i class="ri-loader-4-line rotating"></i>
+
+      </div>
+
+      <h3>
+        Memproses
+      </h3>
+
+      <p>
+        Sedang logout...
+      </p>
+
+    </div>
+
+  `;
+
+  document.body.appendChild(
+    modal
+  );
+
+}
+
+function showRoleSwitchLoading(text = "Sedang memuat...") {
+
+  const old =
+    document.getElementById(
+      "roleSwitchLoadingModal"
+    );
+
+  if (old)
+    old.remove();
+
+  const modal =
+    document.createElement("div");
+
+  modal.id =
+    "roleSwitchLoadingModal";
+
+  modal.className =
+    "app-popup-modal info";
+
+  modal.innerHTML = `
+    <div class="app-popup-overlay"></div>
+
+    <div class="app-popup-box">
+
+      <div class="app-popup-icon">
+        <i class="ri-loader-4-line rotating"></i>
+      </div>
+
+      <h3>Memproses</h3>
+
+      <p>${text}</p>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
 }
 
 function showPlayerPlusPinPopup() {
@@ -1541,6 +1630,10 @@ roleBadge.onclick = async () => {
 
     setRoleSwitchLoading(true);
 
+    showRoleSwitchLoading(
+      "Sedang kembali ke Player..."
+    );
+
     roleBadge.innerHTML = `
       <i class="ri-loader-4-line rotating"></i>
       <span>Memuat</span>
@@ -1599,6 +1692,10 @@ roleBadge.onclick = async () => {
       roleBadge.style.pointerEvents =
         "";
 
+      document
+        .getElementById("roleSwitchLoadingModal")
+        ?.remove();
+
       showApp("player");
 
     } catch (error) {
@@ -1630,6 +1727,10 @@ roleBadge.onclick = async () => {
     return;
 
   setRoleSwitchLoading(true);
+
+  showRoleSwitchLoading(
+    "Sedang masuk Player+..."
+  );
 
   roleBadge.innerHTML = `
     <i class="ri-loader-4-line rotating"></i>
@@ -1700,6 +1801,10 @@ roleBadge.onclick = async () => {
 
     roleBadge.style.pointerEvents =
       "";
+
+    document
+      .getElementById("roleSwitchLoadingModal")
+      ?.remove();
 
     showApp("playerplus");
 
@@ -5593,6 +5698,8 @@ if (logoutBtn) {
 
       if (!confirmLogout)
         return;
+
+      showLogoutLoading();
 
       await sendActivityLog(
         "logout",
