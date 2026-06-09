@@ -58,6 +58,7 @@ const MAX_SESSION_DURATION =
   8 * 60 * 60 * 1000;
 
 let sessionTimer = null;
+let isSessionEnding = false;
 
 let sessionListenerInit =
   false;
@@ -1856,19 +1857,11 @@ async function loadSongData(role) {
         return;
       }
 
-      await appAlert(
+      await endSessionOnce(
         "Sesi berakhir, silakan login kembali.",
-        "warning"
+        "Unauthorized"
       );
 
-      localStorage.removeItem("aqila_role");
-      localStorage.removeItem("aqila_last_active");
-      localStorage.removeItem("aqila_login_time");
-      localStorage.removeItem("aqila_yt_search_choice");
-      localStorage.removeItem("aqila_tab");
-      sessionStorage.removeItem("aqila_token");
-
-      location.reload();
       return;
     }
 
@@ -3424,19 +3417,11 @@ if (!requestLoaded) {
         return;
       }
 
-      await appAlert(
+      await endSessionOnce(
         "Sesi berakhir, silakan login kembali.",
-        "warning"
+        "Unauthorized"
       );
 
-      localStorage.removeItem("aqila_role");
-      localStorage.removeItem("aqila_last_active");
-      localStorage.removeItem("aqila_login_time");
-      localStorage.removeItem("aqila_yt_search_choice");
-      localStorage.removeItem("aqila_tab");
-      sessionStorage.removeItem("aqila_token");
-
-      location.reload();
       return;
     }
 
@@ -5850,24 +5835,11 @@ window.addEventListener(
       loginTime &&
       Date.now() - Number(loginTime) >= MAX_SESSION_DURATION
     ) {
-      await sendActivityLog(
-        "sessionExpired",
+      await endSessionOnce(
+        "Anda aktif terlalu lama, silakan login kembali.",
         "Maksimal sesi 8 jam"
       );
 
-      localStorage.removeItem("aqila_role");
-      localStorage.removeItem("aqila_last_active");
-      localStorage.removeItem("aqila_login_time");
-      localStorage.removeItem("aqila_yt_search_choice");
-      localStorage.removeItem("aqila_tab");
-      sessionStorage.removeItem("aqila_token");
-
-      await appAlert(
-        "Anda aktif terlalu lama, silakan login kembali.",
-        "warning"
-      );
-
-      location.reload();
       return;
     }
 
@@ -5881,37 +5853,10 @@ window.addEventListener(
 
       if (diff >= SESSION_TIMEOUT) {
 
-        await sendActivityLog(
-          "sessionExpired",
+        await endSessionOnce(
+          "Sesi login telah berakhir",
           "Idle timeout"
         );
-
-        localStorage.removeItem(
-          "aqila_role"
-        );
-
-        localStorage.removeItem(
-          "aqila_last_active"
-        );
-
-        localStorage.removeItem(
-          "aqila_login_time"
-        );
-
-        localStorage.removeItem(
-          "aqila_yt_search_choice"
-        );
-
-        localStorage.removeItem(
-          "aqila_tab"
-        );
-
-        await appAlert(
-          "Sesi login telah berakhir",
-          "warning"
-        );
-
-        location.reload();
 
         return;
       }
@@ -7041,7 +6986,7 @@ function resetSessionTimer() {
       "aqila_role"
     );
 
-  if (!role) return;
+  if (!role || isSessionEnding) return;
 
   const loginTime =
     Number(
@@ -7054,35 +6999,27 @@ function resetSessionTimer() {
     Date.now() - loginTime >=
     MAX_SESSION_DURATION
   ) {
-    sendActivityLog(
-      "sessionExpired",
+
+    endSessionOnce(
+      "Anda aktif terlalu lama, silakan login kembali",
       "Maksimal sesi 8 jam"
-    ).finally(() => {
+    );
 
-      appAlert(
-        "Anda aktif terlalu lama, silakan login kembali",
-        "warning"
-      ).then(() => {
-
-      localStorage.removeItem("aqila_role");
-      localStorage.removeItem("aqila_last_active");
-      localStorage.removeItem("aqila_login_time");
-      localStorage.removeItem("aqila_yt_search_choice");
-      localStorage.removeItem("aqila_tab");
-
-      sessionStorage.removeItem("aqila_token");
-
-      location.reload();
-    });
-  });
-
-  return;
+    return;
   }
 
   localStorage.setItem(
     "aqila_last_active",
     Date.now()
   );
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "touchSession",
+      token: sessionStorage.getItem("aqila_token")
+    })
+  }).catch(() => {});
 
   clearTimeout(sessionTimer);
 
@@ -7091,27 +7028,12 @@ function resetSessionTimer() {
     (Date.now() - loginTime);
 
   sessionTimer =
-    setTimeout(async () => {
+    setTimeout(() => {
 
-      await sendActivityLog(
-        "sessionExpired",
+      endSessionOnce(
+        "Sesi berakhir, silakan login kembali",
         "Idle timeout"
       );
-
-      await appAlert(
-        "Sesi berakhir, silakan login kembali",
-        "warning"
-      );
-
-      localStorage.removeItem("aqila_role");
-      localStorage.removeItem("aqila_last_active");
-      localStorage.removeItem("aqila_login_time");
-      localStorage.removeItem("aqila_yt_search_choice");
-      localStorage.removeItem("aqila_tab");
-
-      sessionStorage.removeItem("aqila_token");
-
-      location.reload();
 
     }, Math.min(SESSION_TIMEOUT, remainingMax));
 }
@@ -7651,3 +7573,29 @@ document
 
   }
 );
+
+async function endSessionOnce(message, detail) {
+  if (isSessionEnding) return;
+
+  isSessionEnding = true;
+
+  await sendActivityLog(
+    "sessionExpired",
+    detail
+  );
+
+  await appAlert(
+    message,
+    "warning"
+  );
+
+  localStorage.removeItem("aqila_role");
+  localStorage.removeItem("aqila_last_active");
+  localStorage.removeItem("aqila_login_time");
+  localStorage.removeItem("aqila_yt_search_choice");
+  localStorage.removeItem("aqila_tab");
+
+  sessionStorage.removeItem("aqila_token");
+
+  location.reload();
+}
