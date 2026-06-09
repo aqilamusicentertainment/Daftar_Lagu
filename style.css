@@ -6,10 +6,12 @@
   box-sizing: border-box;
 
   transition:
-    background .25s,
-    color .25s,
-    border-color .25s,
-    box-shadow .25s;
+    background-color .25s ease,
+    background .25s ease,
+    color .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease,
+    opacity .25s ease;
 }
 
 html,

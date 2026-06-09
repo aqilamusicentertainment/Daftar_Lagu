@@ -1,5 +1,5 @@
 const APP_VERSION =
-  "1.1.6";
+  "1.1.7";
 
 const SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbyjVoHLZpHoyhXS_G3eFc7SPAzV0f2qAAV_DDWkrqyrD2znF9ySOSaJ4PD9aITaoE3p/exec";

@@ -1,5 +1,5 @@
 const VERSION =
-  "1.1.6";
+  "1.1.7";
 
 const CACHE_NAME =
   `aqila-v${VERSION}`;
