@@ -1717,6 +1717,10 @@ roleBadge.onclick = async () => {
 
     if (!result.success) {
 
+      document
+        .getElementById("roleSwitchLoadingModal")
+        ?.remove();
+
       roleBadge.classList.remove(
         "badge-loading"
       );
@@ -1768,6 +1772,10 @@ roleBadge.onclick = async () => {
   } catch (error) {
 
     console.error(error);
+
+    document
+      .getElementById("roleSwitchLoadingModal")
+      ?.remove();
 
     roleBadge.classList.remove(
       "badge-loading"
